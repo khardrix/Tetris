@@ -179,56 +179,7 @@ public class Main extends Application {
 
 
         timer = new Timeline(new KeyFrame(Duration.millis(speed), e-> {
-            if (canFallingTetraminoMoveDownOneRow()) {
-                // System.out.println(canFallingTetraminoMoveDownOneRow());
-                moveFallingTetraminoDownOneRow();
-                placeFallingTetraminoIntoBoardMatrix();
-            } else {
-                placeFallingTetraminoIntoBoardMatrix();
-                drawFallingTetramino();
-
-                // /*
-                if (wasARowCompleted()) {
-                    setLowestOccupiedRowAfterClearingARow();
-                    eraseBoard();
-                    createBoardBlocks();
-                    drawBoard();
-
-
-                    // numberOfRowsCleared++;
-                    if (numberOfRowsCleared % 10 == 0) {
-                        timer.stop();                                               // NEW CODE
-                        incrementAndDisplayLevel();                                 // NEW CODE
-                        System.out.println("level = " + level);                     // NEW CODE
-                        if (speed - 100 >= 100) {
-                            speed -= 100;
-                            System.out.println("speed = " + speed);
-                        }
-                        /*
-                         *
-                         *  NEW CODE BELOW
-                         *
-                         */
-                        timer.setCycleCount(Timeline.INDEFINITE);                                       // NEW CODE
-                        // NEW CODE BELOW
-                        timer.rateProperty().bind(new SimpleDoubleProperty(1.0).multiply(1.1));
-                        // timer.setRate(speed);                                                        // NEW CODE
-                        // timer.play();                                                                   // NEW CODE
-                    }
-
-                    timer.play();                                                                   // NEW CODE
-
-                    paneScoreDisplay.getChildren().remove(lblScoreValue);
-                    score += getValueToAddToScore();
-                    lblScoreValue.setText(String.valueOf(score));
-                    paneScoreDisplay.getChildren().add(lblScoreValue);
-                }
-                // */
-
-                generateNewRandomFallingTetramino();
-                placeFallingTetraminoIntoBoardMatrix();
-            }
-            drawFallingTetramino();
+            playGame();
         }));
 
         // Set the CycleCount of the Animation to INDEFINITE (animation doesn't end) and Play the animation
@@ -711,6 +662,63 @@ public class Main extends Application {
 
         // Initialize the Color of the block borders
         colorBorder = Color.BLACK;
+    }
+
+
+    /**
+     * Runs the game
+     */
+    private void playGame() {
+        if (canFallingTetraminoMoveDownOneRow()) {
+            moveFallingTetraminoDownOneRow();
+            placeFallingTetraminoIntoBoardMatrix();
+        } else {
+            placeFallingTetraminoIntoBoardMatrix();
+            drawFallingTetramino();
+
+            if (wasARowCompleted()) {
+                setLowestOccupiedRowAfterClearingARow();
+                eraseBoard();
+                createBoardBlocks();
+                drawBoard();
+
+                if (numberOfRowsCleared % 10 == 0) {
+                    timer.stop();                                               // NEW CODE
+                    incrementAndDisplayLevel();                                 // NEW CODE
+                    System.out.println("level = " + level);                     // NEW CODE
+                    if (speed - 100 >= 100) {
+                        speed -= 100;
+                        System.out.println("speed = " + speed);
+                    }
+                    /*
+                     *
+                     *  NEW CODE BELOW
+                     *
+                     */
+                    timer.setCycleCount(Timeline.INDEFINITE);                                       // NEW CODE
+                    // NEW CODE BELOW
+                    timer.rateProperty().bind(new SimpleDoubleProperty(1.0).multiply(1.1));
+                    // timer.setRate(speed);                                                        // NEW CODE
+                    // timer.play();                                                                   // NEW CODE
+                }
+
+                timer.play();                                                                   // NEW CODE
+
+                paneScoreDisplay.getChildren().remove(lblScoreValue);
+                score += getValueToAddToScore();
+                lblScoreValue.setText(String.valueOf(score));
+                paneScoreDisplay.getChildren().add(lblScoreValue);
+            }
+
+            generateNewRandomFallingTetramino();
+
+            if (!placeFallingTetraminoIntoBoardMatrix()) {
+                lostGame();
+                timer.stop();
+            }
+
+        }
+        drawFallingTetramino();
     }
 
 
