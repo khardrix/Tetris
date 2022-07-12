@@ -338,6 +338,88 @@ public class Main extends Application {
 
 
     /**
+     * Set which keyboard button moves the Tetramino left one column
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            moving Tetramino left one column to
+     */
+    private void setControlButtonMoveLeft(KeyCode key) {
+        controlButtonMoveLeft = key;
+    }
+
+
+    /**
+     * Set which keyboard button moves the Tetramino right one column
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            moving Tetramino right one column to
+     */
+    private void setControlButtonMoveRight(KeyCode key) {
+        controlButtonMoveRight = key;
+    }
+
+
+    /**
+     * Set which keyboard button moves the Tetramino down one row
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            moving Tetramino down one row to
+     */
+    private void setControlButtonSoftDrop(KeyCode key) {
+        controlButtonSoftDrop = key;
+    }
+
+
+    /**
+     * Set which keyboard button moves the Tetramino down as many rows as possible
+     * until the Tetramino is in place
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            moving Tetramino down as many rows as possible until the Tetramino is in place
+     */
+    private void setControlButtonHardDrop(KeyCode key) {
+        controlButtonHardDrop = key;
+    }
+
+    /**
+     * Set which keyboard button rotates the Tetramino counterclockwise
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            rotating Tetramino counterclockwise
+     */
+    private void setControlButtonRotateCounterclockwise(KeyCode key) {
+        controlButtonRotateCounterclockwise = key;
+    }
+
+
+    /**
+     * Set which keyboard button rotates the Tetramino clockwise
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            rotating Tetramino clockwise
+     */
+    private void setControlButtonRotateClockwise(KeyCode key) {
+        controlButtonRotateClockwise = key;
+    }
+
+
+    /**
+     * Set which keyboard button moves the current falling Tetramino into the hold Tetramino box or
+     * moves the Tetramino in the hold Tetramino box to the current falling Tetramino
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            moving the current falling Tetramino into the hold Tetramino box or
+     *            moves the Tetramino in the hold Tetramino box to the current falling Tetramino
+     */
+    private void setControlButtonHold(KeyCode key) {
+        controlButtonHold = key;
+    }
+
+
+    /**
+     * Set which keyboard button pauses/resumes the game
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            to pausing/resuming the game
+     */
+    private void setControlButtonPause(KeyCode key) {
+        controlButtonPause = key;
+    }
+
+
+    /**
      * Sets the color of O-Blocks
      * @param color Color parameter - set O-Blocks to this Color
      */
@@ -808,7 +890,7 @@ public class Main extends Application {
         });
 
         scenePauseMenu.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE) {
+            if (e.getCode() == controlButtonPause) {
                 scenePauseMenu.getWindow().hide();
                 resumeGame();
             }
