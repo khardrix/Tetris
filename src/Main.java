@@ -703,7 +703,8 @@ public class Main extends Application {
 
 
     /**
-     * Generates random Tetramino that will be the next Tetramino to fall and draws it in paneNextTetramino
+     * Generates the Tetramino that will be the next Tetramino to fall from the top upcoming Tetramino
+     * and draws it in paneNextTetramino
      */
     private void generateNextTetramino() {
         eraseNextTetramino();
@@ -718,6 +719,9 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Erases all Rectangles that make up the top upcoming Tetramino
+     */
     private void eraseUpcomingTetraminoTop() {
         for (int row = 0; row < upcomingTopBlocks.length; row++) {
             for (int col = 0; col < upcomingTopBlocks[row].length; col++) {
@@ -727,6 +731,10 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Draws the top upcoming Tetramino at the top of the Pane paneUpcomingTetraminos
+     * @param matrix int[][] parameter - the 2D int matrix that represents the top upcoming Tetramino
+     */
     private void drawUpcomingTetraminoTop(int[][] matrix) {
         Rectangle currentBlock;
 
@@ -749,6 +757,10 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Generates the Tetramino that will be the top upcoming Tetramino from the middle upcoming Tetramino
+     * and draws it in paneUpcomingTetraminos
+     */
     private void generateUpcomingTetraminoTop() {
         eraseUpcomingTetraminoTop();
         upcomingTetraminoTypeTop = upcomingTetraminoTypeMiddle;
@@ -762,6 +774,9 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Erases all Rectangles that make up the middle upcoming Tetramino
+     */
     private void eraseUpcomingTetraminoMiddle() {
         for (int row = 0; row < upcomingMiddleBlocks.length; row++) {
             for (int col = 0; col < upcomingMiddleBlocks[row].length; col++) {
@@ -771,6 +786,10 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Draws the middle upcoming Tetramino at the middle of the Pane paneUpcomingTetraminos
+     * @param matrix int[][] parameter - the 2D int matrix that represents the middle upcoming Tetramino
+     */
     private void drawUpcomingTetraminoMiddle(int[][] matrix) {
         Rectangle currentBlock;
 
@@ -794,6 +813,10 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Generates the Tetramino that will be the middle upcoming Tetramino from the bottom upcoming Tetramino
+     * and draws it in paneUpcomingTetraminos
+     */
     private void generateUpcomingTetraminoMiddle() {
         eraseUpcomingTetraminoMiddle();
         upcomingTetraminoTypeMiddle = upcomingTetraminoTypeBottom;
@@ -807,6 +830,9 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Erases all Rectangles that make up the bottom upcoming Tetramino
+     */
     private void eraseUpcomingTetraminoBottom() {
         for (int row = 0; row < upcomingBottomBlocks.length; row++) {
             for (int col = 0; col < upcomingBottomBlocks[row].length; col++) {
@@ -816,6 +842,10 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Draws the bottom upcoming Tetramino at the bottom of the Pane paneUpcomingTetraminos
+     * @param matrix int[][] parameter - the 2D int matrix that represents the bottom upcoming Tetramino
+     */
     private void drawUpcomingTetraminoBottom(int[][] matrix) {
         Rectangle currentBlock;
 
@@ -839,6 +869,10 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Generates a new random Tetramino that will be the bottom upcoming Tetramino
+     * and draws it in paneUpcomingTetraminos
+     */
     private void generateUpcomingTetraminoBottom() {
         eraseUpcomingTetraminoBottom();
         upcomingTetraminoTypeBottom = generateRandomTetraminoType();
@@ -861,6 +895,9 @@ public class Main extends Application {
     }
 
 
+    /**
+     * NOT IMPLEMENTED YET - TO BE USED IN STOP WATCH IN GAME INFORMATION DISPLAY
+     */
     private void startTimer() {
         // timestamp = System.currentTimeMillis() - timeFraction;
     }
