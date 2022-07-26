@@ -4,12 +4,14 @@ import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -26,6 +28,23 @@ import java.util.*;
 public class Main extends Application {
 
     // Class variables
+    private EventHandler<KeyEvent> keyHandlerBtnMoveLeft;
+    private EventHandler<KeyEvent> keyHandlerBtnMoveRight;
+    private EventHandler<KeyEvent> keyHandlerBtnSoftDrop;
+    private EventHandler<KeyEvent> keyHandlerBtnHardDrop;
+    private EventHandler<KeyEvent> keyHandlerBtnRotateCounterclockwise;
+    private EventHandler<KeyEvent> keyHandlerBtnRotateClockwise;
+    private EventHandler<KeyEvent> keyHandlerBtnHold;
+    private EventHandler<KeyEvent> keyHandlerBtnPause;
+    private Button btnMoveLeft;
+    private Button btnMoveRight;
+    private Button btnSoftDrop;
+    private Button btnHardDrop;
+    private Button btnRotateCounterclockwise;
+    private Button btnRotateClockwise;
+    private Button btnHold;
+    private Button btnPause;
+    private Scene sceneControlOptions;
     private Timeline timer;
     private Random random;
     private Pane paneGameBoard;
@@ -105,7 +124,8 @@ public class Main extends Application {
     private Color colorOBlock, colorIBlock, colorSBlock, colorZBlock, colorLBlock, colorJBlock, colorTBlock,
             colorEmptyBlock;
     private Color colorBorder;
-    private Stage pauseStage;
+    private Stage stagePause;
+    private Stage stageOptions;
     private KeyCode controlButtonMoveLeft;
     private KeyCode controlButtonMoveRight;
     private KeyCode controlButtonSoftDrop;
@@ -172,6 +192,94 @@ public class Main extends Application {
                 controlPauseButton();
             }
         });
+
+        keyHandlerBtnMoveLeft = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonMoveLeft(key);
+                btnMoveLeft.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveLeft);
+            }
+        };
+
+        keyHandlerBtnMoveRight = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonMoveRight(key);
+                btnMoveRight.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveRight);
+            }
+        };
+
+        keyHandlerBtnSoftDrop = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonSoftDrop(key);
+                btnSoftDrop.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnSoftDrop);
+            }
+        };
+
+        keyHandlerBtnHardDrop = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonHardDrop(key);
+                btnHardDrop.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
+            }
+        };
+
+        keyHandlerBtnRotateCounterclockwise = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonRotateCounterclockwise(key);
+                btnRotateCounterclockwise.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
+            }
+        };
+
+        keyHandlerBtnRotateClockwise = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonRotateClockwise(key);
+                btnRotateClockwise.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateClockwise);
+            }
+        };
+
+        keyHandlerBtnHold = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonHold(key);
+                btnHold.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHold);
+            }
+        };
+
+        keyHandlerBtnPause = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                System.out.println(key.getName().toString());
+                setControlButtonPause(key);
+                btnPause.setText(key.getName().toString());
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
+            }
+        };
 
         /////////////////////////////////////// WINDOW CONTROLS //////////////////////////////////////////
         primaryStage.setOnCloseRequest(e -> {
@@ -1079,15 +1187,15 @@ public class Main extends Application {
         gridPanePauseMenu.getChildren().add(vBoxPauseMenu);
 
         // ORIGINAL SIZE: (BLOCK_SIZE * (60 / 3.0)), (BLOCK_SIZE * (40 / 3.0))
-        Scene scenePauseMenu = new Scene(gridPanePauseMenu, (BLOCK_SIZE * (24 / 3.0)), (BLOCK_SIZE * (27 / 3.0)));
-        pauseStage = new Stage();
-        pauseStage.setTitle("Pause Menu");
-        pauseStage.setScene(scenePauseMenu);
-        pauseStage.show();
+        Scene scenePauseMenu = new Scene(gridPanePauseMenu, (BLOCK_SIZE * 8), (BLOCK_SIZE * 9));
+        stagePause = new Stage();
+        stagePause.setTitle("Pause Menu");
+        stagePause.setScene(scenePauseMenu);
+        stagePause.show();
 
         scenePauseMenu.getStylesheets().add("styling/pauseMenu.css");
 
-        pauseStage.setOnCloseRequest(e -> {
+        stagePause.setOnCloseRequest(e -> {
             e.consume();
             closePauseMenu();
         });
@@ -1104,14 +1212,18 @@ public class Main extends Application {
         });
 
         btnResume.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE) {
-                scenePauseMenu.getWindow().hide();
-                timer.play();
+            if (e.getCode() == controlButtonPause || e.getCode() == KeyCode.ENTER) {
+                closePauseMenu();
             }
         });
 
+        btnOptions.setOnMouseClicked(e -> {
+            stagePause.close();
+            openOptionsMenu();
+        });
+
         btnExit.setOnMouseClicked(e -> {
-            closeProgram(pauseStage, true);
+            closeProgram(stagePause, true);
         });
     }
 
@@ -1120,8 +1232,208 @@ public class Main extends Application {
      * Closes the pause menu Stage and restarts the game
      */
     private void closePauseMenu() {
-        pauseStage.close();
+        closeStage(stagePause);
         timer.play();
+    }
+
+
+    /**
+     * Creates and opens the options menu from the pause menu
+     */
+    private void openOptionsMenu() {
+        VBox vBoxOptions = new VBox();
+
+        Button btnControls = new Button("CONTROLS");
+        Button btnColors = new Button("COLORS");
+        Button btnBack = new Button("BACK");
+        /* MORE BUTTONS TO BE ADDED LATER WHEN MORE OPTIONS ARE ADDED */
+
+        vBoxOptions.getChildren().addAll(btnControls, btnColors, btnBack);
+
+        Scene sceneOptions = new Scene(vBoxOptions, (BLOCK_SIZE * 8), (BLOCK_SIZE * 9));
+        stageOptions = new Stage();
+        stageOptions.setTitle("Options Menu");
+        stageOptions.setScene(sceneOptions);
+        stageOptions.show();
+        sceneOptions.getStylesheets().add("/styling/OptionMenu.css");
+
+        stageOptions.setOnCloseRequest(e -> {
+            e.consume();
+            closeStage(stageOptions);
+            openPauseMenu();
+        });
+
+        btnBack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+                closeStage(stageOptions);
+                openPauseMenu();
+            }
+        });
+
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageOptions);
+            openPauseMenu();
+        });
+
+        btnControls.setOnMouseClicked(e -> {
+            closeStage(stageOptions);
+            openControlOptionsMenu();
+        });
+
+        btnControls.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER) {
+                closeStage(stageOptions);
+                openControlOptionsMenu();
+            }
+        });
+    }
+
+
+    /**
+     * Closes the options menu
+     */
+    private void closeOptionsMenu() {
+        stageOptions.close();
+        openPauseMenu();
+    }
+
+
+    /**
+     * Opens the controls menu from the options menu
+     */
+    private void openControlOptionsMenu() {
+        Stage stageControlOptions = new Stage();
+
+        GridPane gridPaneControlOptions = new GridPane();
+
+        Label lblMoveLeft = new Label("Move Left");
+        gridPaneControlOptions.setConstraints(lblMoveLeft, 0, 0);
+        btnMoveLeft = new Button(controlButtonMoveLeft.getName().toString());
+        gridPaneControlOptions.setConstraints(btnMoveLeft, 1, 0);
+        Label lblMoveRight = new Label("Move Right");
+        gridPaneControlOptions.setConstraints(lblMoveRight, 0, 1);
+        btnMoveRight = new Button(controlButtonMoveRight.getName().toString());
+        gridPaneControlOptions.setConstraints(btnMoveRight, 1, 1);
+        Label lblSoftDrop = new Label("Soft Drop");
+        gridPaneControlOptions.setConstraints(lblSoftDrop, 0, 2);
+        btnSoftDrop = new Button(controlButtonSoftDrop.getName().toString());
+        gridPaneControlOptions.setConstraints(btnSoftDrop, 1, 2);
+        Label lblHardDrop = new Label("Hard Drop");
+        gridPaneControlOptions.setConstraints(lblHardDrop, 0, 3);
+        btnHardDrop = new Button(controlButtonHardDrop.getName().toString());
+        gridPaneControlOptions.setConstraints(btnHardDrop, 1, 3);
+        Label lblRotateCounterclockwise = new Label("Rotate Counterclockwise");
+        gridPaneControlOptions.setConstraints(lblRotateCounterclockwise, 0, 4);
+        btnRotateCounterclockwise = new Button(controlButtonRotateCounterclockwise.getName().toString());
+        gridPaneControlOptions.setConstraints(btnRotateCounterclockwise, 1, 4);
+        Label lblRotateClockwise = new Label("Rotate Clockwise");
+        gridPaneControlOptions.setConstraints(lblRotateClockwise, 0, 5);
+        btnRotateClockwise = new Button(controlButtonRotateClockwise.getName().toString());
+        gridPaneControlOptions.setConstraints(btnRotateClockwise, 1, 5);
+        Label lblHold = new Label("Hold");
+        gridPaneControlOptions.setConstraints(lblHold, 0, 6);
+        btnHold = new Button(controlButtonHold.getName().toString());
+        gridPaneControlOptions.setConstraints(btnHold, 1, 6);
+        Label lblPause = new Label("Pause");
+        gridPaneControlOptions.setConstraints(lblPause, 0, 7);
+        btnPause = new Button(controlButtonPause.getName().toString());
+        gridPaneControlOptions.setConstraints(btnPause, 1, 7);
+        Button btnBack = new Button("Back");
+        gridPaneControlOptions.setConstraints(btnBack, 0, 8, 3, 1);
+        btnBack.setId("btnBack");
+
+
+
+
+        gridPaneControlOptions.getChildren().addAll(
+                lblMoveLeft, btnMoveLeft,
+                lblMoveRight, btnMoveRight,
+                lblSoftDrop, btnSoftDrop,
+                lblHardDrop, btnHardDrop,
+                lblRotateCounterclockwise, btnRotateCounterclockwise,
+                lblRotateClockwise, btnRotateClockwise,
+                lblHold, btnHold,
+                lblPause, btnPause,
+                btnBack
+        );
+
+        gridPaneControlOptions.setId("grid");
+
+        sceneControlOptions = new Scene(gridPaneControlOptions, (BLOCK_SIZE * 16), (BLOCK_SIZE * 15));
+        stageControlOptions.setTitle("Control Options");
+        stageControlOptions.setScene(sceneControlOptions);
+        stageControlOptions.show();
+        sceneControlOptions.getStylesheets().add("/styling/ControlOptionsMenu.css");
+
+        stageControlOptions.setOnCloseRequest(e -> {
+            e.consume();
+            closeStage(stageControlOptions);
+
+            // \/ - NEEDS CHANGED - NEED NEW METHOD TO GO FROM CONTROL OPTIONS TO OPTIONS
+            openOptionsMenu();
+        });
+
+
+        btnBack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+                closeStage(stageControlOptions);
+                openOptionsMenu();
+            }
+        });
+
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageControlOptions);
+            openOptionsMenu();
+        });
+
+        btnMoveLeft.setOnMouseClicked(e -> {
+            btnMoveLeft.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveLeft);
+        });
+
+        btnMoveRight.setOnMouseClicked(e -> {
+            btnMoveRight.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveRight);
+        });
+
+        btnSoftDrop.setOnMouseClicked(e -> {
+            btnSoftDrop.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnSoftDrop);
+        });
+
+        btnHardDrop.setOnMouseClicked(e -> {
+            btnHardDrop.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
+        });
+
+        btnRotateCounterclockwise.setOnMouseClicked(e -> {
+            btnRotateCounterclockwise.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
+        });
+
+        btnRotateClockwise.setOnMouseClicked(e -> {
+            btnRotateClockwise.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateClockwise);
+        });
+
+        btnHold.setOnMouseClicked(e -> {
+            btnHold.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHold);
+        });
+
+        btnPause.setOnMouseClicked(e -> {
+            btnPause.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
+        });
+    }
+
+
+    /**
+     * Closes whatever Stage is passed to this method
+     * @param stageToClose Stage parameter - the Stage that will be closed
+     */
+    private void closeStage(Stage stageToClose) {
+        stageToClose.close();
     }
 
 

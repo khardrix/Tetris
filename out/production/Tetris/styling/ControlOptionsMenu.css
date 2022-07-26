@@ -1,0 +1,36 @@
+.root {
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+    /*-fx-background-image: url("/styling/TetrisBackgroundShiny.png");*/
+    -fx-background-color: #F00;
+}
+
+#grid {
+    -fx-hgap: 30px;
+    -fx-vgap: 5px;
+}
+
+#btnBack {
+    -fx-pref-width: 412px;
+}
+
+.button {
+    -fx-pref-width: 150px;
+    -fx-pref-height: 30px;
+    -fx-vgap: 5px;
+}
+
+.button:hover {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+}
+
+.button:pressed {
+    -fx-background-color: green;
+    -fx-text-fill: yellow;
+}
+
+,vbox {
+    -fx-alignment: center;
+    -fx-spacing: 5px;
+}
