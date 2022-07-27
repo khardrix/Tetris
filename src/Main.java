@@ -4,17 +4,13 @@ import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
@@ -1281,10 +1277,22 @@ public class Main extends Application {
         });
 
         btnControls.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
                 closeStage(stageOptions);
                 openControlOptionsMenu();
             }
+        });
+
+        btnColors.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+                closeStage(stageOptions);
+                openColorOptionsMenu();
+            }
+        });
+
+        btnColors.setOnMouseClicked(e -> {
+            closeStage(stageOptions);
+            openColorOptionsMenu();
         });
     }
 
@@ -1425,6 +1433,211 @@ public class Main extends Application {
             btnPause.setText("---");
             sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
         });
+    }
+
+
+    /**
+     * Creates and opens the Color Options Menu from the Options Menu
+     */
+    private void openColorOptionsMenu() {
+        Stage stageColorOptionsMenu = new Stage();
+        GridPane gridPaneColorOptionsMenu = new GridPane();
+
+        Label lblTetriminoColors = new Label("Tetrimino Colors");
+        gridPaneColorOptionsMenu.setConstraints(lblTetriminoColors, 0, 0);
+        Label lblColorOBlock = new Label("O-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorOBlock, 0, 1);
+        ColorPicker colorPickerOBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerOBlock, 1, 1);
+        Label lblColorIBlock = new Label("I-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorIBlock, 0, 2);
+        ColorPicker colorPickerIBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerIBlock, 1, 2);
+        Label lblColorSBlock = new Label("S-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorSBlock, 0, 3);
+        ColorPicker colorPickerSBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerSBlock, 1, 3);
+        Label lblColorZBlock = new Label("Z-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorZBlock, 0, 4);
+        ColorPicker colorPickerZBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerZBlock, 1, 4);
+        Label lblColorLBlock = new Label("L-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorLBlock, 0, 5);
+        ColorPicker colorPickerLBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerLBlock, 1, 5);
+        Label lblColorJBlock = new Label("J-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorJBlock, 0, 6);
+        ColorPicker colorPickerJBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerJBlock, 1, 6);
+        Label lblColorTBlock = new Label("T-Block");
+        gridPaneColorOptionsMenu.setConstraints(lblColorTBlock, 0, 7);
+        ColorPicker colorPickerTBlock = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerTBlock, 1, 7);
+        Label lblMoreColorOptions = new Label("More Color Options");
+        gridPaneColorOptionsMenu.setConstraints(lblMoreColorOptions, 0, 8);
+        Label lblColorBlockBorder = new Label("Block Border");
+        gridPaneColorOptionsMenu.setConstraints(lblColorBlockBorder, 0, 9);
+        ColorPicker colorPickerBlockBorder = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerBlockBorder, 1, 9);
+        Label lblColorGameBoard = new Label("Game Board");
+        gridPaneColorOptionsMenu.setConstraints(lblColorGameBoard, 0, 10);
+        ColorPicker colorPickerGameBoard = new ColorPicker();
+        gridPaneColorOptionsMenu.setConstraints(colorPickerGameBoard, 1, 10);
+        Button btnBack = new Button("Back");
+        gridPaneColorOptionsMenu.setConstraints(btnBack, 0, 11);
+
+        gridPaneColorOptionsMenu.getChildren().addAll(
+                lblTetriminoColors,
+                lblColorOBlock, colorPickerOBlock,
+                lblColorIBlock, colorPickerIBlock,
+                lblColorSBlock, colorPickerSBlock,
+                lblColorZBlock, colorPickerZBlock,
+                lblColorLBlock, colorPickerLBlock,
+                lblColorJBlock, colorPickerJBlock,
+                lblColorTBlock, colorPickerTBlock,
+                lblMoreColorOptions,
+                lblColorBlockBorder, colorPickerBlockBorder,
+                lblColorGameBoard, colorPickerGameBoard,
+                btnBack
+        );
+
+        Scene sceneColorOptionsMenu = new Scene(gridPaneColorOptionsMenu, (BLOCK_SIZE * 16), (BLOCK_SIZE * 16));
+        sceneColorOptionsMenu.getStylesheets().add("/styling/ColorOptionsMenu.css");
+        stageColorOptionsMenu.setScene(sceneColorOptionsMenu);
+        stageColorOptionsMenu.setTitle("Color Options");
+        stageColorOptionsMenu.show();
+
+        stageColorOptionsMenu.setOnCloseRequest(e -> {
+            e.consume();
+            closeStage(stageColorOptionsMenu);
+            openOptionsMenu();
+        });
+
+        btnBack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+                closeStage(stageColorOptionsMenu);
+                openOptionsMenu();
+            }
+        });
+
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageColorOptionsMenu);
+            openOptionsMenu();
+        });
+
+        colorPickerOBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerOBlock.getValue();
+                setColorOBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerIBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerIBlock.getValue();
+                setColorIBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerSBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerSBlock.getValue();
+                setColorSBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerZBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerZBlock.getValue();
+                setColorZBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerLBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerLBlock.getValue();
+                setColorLBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerJBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerJBlock.getValue();
+                setColorJBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerTBlock.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerTBlock.getValue();
+                setColorTBlock(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerBlockBorder.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerBlockBorder.getValue();
+                setColorBorder(c);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+
+        colorPickerGameBoard.setOnAction(new EventHandler() {
+            public void handle(Event t) {
+                Color c = colorPickerGameBoard.getValue();
+                String colorHexString = toRGBCode(c);
+                setColorEmptyBlock(c);
+                paneGameBoard.setStyle("-fx-background-color: " + colorHexString);
+                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
+                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
+//                eraseBoard();
+//                drawBoard();
+            }
+        });
+    }
+
+
+    /**
+     * Returns the Color passed in as a Hexadecimal RGB String
+     * @param color Color parameter - the Color to convert to Hexadecimal RGB
+     * @return String of the Hexadecimal value of the Color passed in
+     */
+    public String toRGBCode(Color color) {
+        return String.format( "#%02X%02X%02X",
+                (int)( color.getRed() * 255 ),
+                (int)( color.getGreen() * 255 ),
+                (int)( color.getBlue() * 255 ) );
     }
 
 
