@@ -3,7 +3,9 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -108,7 +110,12 @@ public class Main extends Application {
     private final int START_X_GAME_INFORMATION = (int)(BLOCK_SIZE * (86 / 3.0));        // 860
     private final int START_Y_GAME_INFORMATION = (int)(BLOCK_SIZE * (2 / 3.0));         // 20
     private int[][] boardMatrix;
+    private int[][] holdTetraminoMatrix;
     private int[][] tetraminoMatrix;
+    private int[][] nextTetraminoMatrix;
+    private int[][] upcomingTetraminoTopMatrix;
+    private int[][] upcomingTetraminoMiddleMatrix;
+    private int[][] upcomingTetraminoBottomMatrix;
     private List<int[]> fallingTetraminoBlocksCoordinates;
     private Rectangle[][] blocks;
     private Rectangle[][] holdBlocks;
@@ -153,9 +160,7 @@ public class Main extends Application {
         placeFallingTetraminoIntoBoardMatrix();
         drawFallingTetramino();
 
-        timer = new Timeline(new KeyFrame(Duration.millis(speed), e-> {
-            playGame();
-        }));
+        runGameAtSpecifiedSpeed(speed);
 
         // Set the CycleCount of the Animation to INDEFINITE (animation doesn't end) and Play the animation
         timer.setCycleCount(Timeline.INDEFINITE);
@@ -405,13 +410,20 @@ public class Main extends Application {
 
         // Initialize the default beginning speed
         // Attempting to match NES Tetris speed (800 = speed of level 00, 720 = level 01, 640 = level 02)
-        speed = 800;
+        speed = 480;
 
         // Initialize the boardMatrix
         boardMatrix = new int[numOfRowsBoard][numOfColsBoard];
 
         // Set the default size of the tetraminoMatrix
         tetraminoMatrix = new int[numOfRowsTetramino][numOfColsTetramino];
+
+        // Initialize the rest of the matrixes
+        holdTetraminoMatrix = new int[4][4];
+        nextTetraminoMatrix = new int[4][4];
+        upcomingTetraminoTopMatrix = new int[4][4];
+        upcomingTetraminoMiddleMatrix = new int[4][4];
+        upcomingTetraminoBottomMatrix = new int[4][4];
 
         // Initialize first falling Tetramino
         fallingTetraminoType = 1 + random.nextInt(numberOfUniqueTetraminos);
@@ -445,6 +457,12 @@ public class Main extends Application {
         upcomingTetraminoTypeMiddle = generateRandomTetraminoType();
         upcomingTetraminoTypeBottom = generateRandomTetraminoType();
 
+        generateNewFallingTetraminoFromNextTetramino();
+        generateNextTetraminoFromUpcomingTetraminoTop();
+        generateUpcomingTetraminoTopFromUpcomingTetraminoMiddle();
+        generateUpcomingTetraminoMiddleFromUpcomingTetraminoBottom();
+        generateRandomUpcomingTetraminoBottom();
+
         // Initialize default Colors of the different tetramino blocks
         colorOBlock = Color.YELLOW;
         colorIBlock = Color.PURPLE;
@@ -459,6 +477,22 @@ public class Main extends Application {
 
         // Initialize the Color of the block borders
         colorBorder = Color.BLACK;
+    }
+
+
+    /**
+     * Runs the game (repeatedly calls the playGame() game at specified millisecond interval)
+     * @param milliseconds int parameter - The number of milliseconds between this method repeatedly calling playGame()
+     */
+    private void runGameAtSpecifiedSpeed(int milliseconds) {
+        timer = new Timeline(new KeyFrame(Duration.millis(milliseconds), new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                playGame();
+            }
+        }));
+        timer.setCycleCount(Timeline.INDEFINITE);
+        timer.play();
     }
 
 
@@ -782,24 +816,18 @@ public class Main extends Application {
 
     /**
      * Draws the next Tetramino to be generated in paneNextTetramino
-     * @param matrix int[][] parameter - 2D int matrix to be looped through to draw the next Tetramino
      */
-    private void drawNextTetramino(int[][] matrix) {
-        Rectangle currentBlock;
-
-        for (int row = 0; row < matrix.length; row++) {
-            for (int col = 0; col < matrix[row].length; col++) {
-                if (matrix[row][col] != 0) {
-                    currentBlock = new Rectangle(30 + START_X_NEXT_TETRAMINO + (BLOCK_SIZE * col),
-                            60 + START_Y_NEXT_TETRAMINO + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
-
-                    currentBlock.setFill(getBlockColor(nextTetraminoType));
-
-                    currentBlock.setStroke(colorBorder);
-
-                    nextBlocks[row][col] = currentBlock;
-
-                    paneNextTetramino.getChildren().add(currentBlock);
+    private void drawNextTetramino() {
+        for (int row = 0; row < nextTetraminoMatrix.length; row++) {
+            for (int col = 0; col < nextTetraminoMatrix[row].length; col++) {
+                if (nextTetraminoMatrix[row][col] != 0) {
+                    drawBlock(
+                            paneNextTetramino,
+                            nextBlocks,
+                            (30 + START_X_NEXT_TETRAMINO), (60 + START_Y_NEXT_TETRAMINO),
+                            row, col,
+                            nextTetraminoType
+                    );
                 }
             }
         }
@@ -817,9 +845,9 @@ public class Main extends Application {
         Color newColor = getBlockColor(nextTetraminoType);
         Block nextTetraminoBlock = new Block(newColor);
 
-        int[][] nextTetraminoMatrix = nextTetraminoBlock.getBlockMatrix(nextTetraminoType, 0);
+        nextTetraminoMatrix = nextTetraminoBlock.getBlockMatrix(nextTetraminoType, 0);
 
-        drawNextTetramino(nextTetraminoMatrix);
+        drawNextTetramino();
     }
 
 
@@ -837,24 +865,18 @@ public class Main extends Application {
 
     /**
      * Draws the top upcoming Tetramino at the top of the Pane paneUpcomingTetraminos
-     * @param matrix int[][] parameter - the 2D int matrix that represents the top upcoming Tetramino
      */
-    private void drawUpcomingTetraminoTop(int[][] matrix) {
-        Rectangle currentBlock;
-
-        for (int row = 0; row < matrix.length; row++) {
-            for (int col = 0; col < matrix[row].length; col++) {
-                if (matrix[row][col] != 0) {
-                    currentBlock = new Rectangle(30 + START_X_UPCOMING_TETRAMINOS + (BLOCK_SIZE * col),
-                            START_Y_UPCOMING_TETRAMINOS + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
-
-                    currentBlock.setFill(getBlockColor(upcomingTetraminoTypeTop));
-
-                    currentBlock.setStroke(colorBorder);
-
-                    upcomingTopBlocks[row][col] = currentBlock;
-
-                    paneUpcomingTetraminos.getChildren().add(currentBlock);
+    private void drawUpcomingTetraminoTop() {
+        for (int row = 0; row < upcomingTetraminoTopMatrix.length; row++) {
+            for (int col = 0; col < upcomingTetraminoTopMatrix[row].length; col++) {
+                if (upcomingTetraminoTopMatrix[row][col] != 0) {
+                    drawBlock(
+                            paneUpcomingTetraminos,
+                            upcomingTopBlocks,
+                            (30 + START_X_UPCOMING_TETRAMINOS), START_Y_UPCOMING_TETRAMINOS,
+                            row, col,
+                            upcomingTetraminoTypeTop
+                    );
                 }
             }
         }
@@ -872,9 +894,9 @@ public class Main extends Application {
         Color color = getBlockColor(upcomingTetraminoTypeTop);
         Block upcomingTetraminoTopBlock = new Block(color);
 
-        int[][] upcomingTetraminTopMatrix = upcomingTetraminoTopBlock.getBlockMatrix(upcomingTetraminoTypeTop, 0);
+        upcomingTetraminoTopMatrix = upcomingTetraminoTopBlock.getBlockMatrix(upcomingTetraminoTypeTop, 0);
 
-        drawUpcomingTetraminoTop(upcomingTetraminTopMatrix);
+        drawUpcomingTetraminoTop();
     }
 
 
@@ -892,25 +914,19 @@ public class Main extends Application {
 
     /**
      * Draws the middle upcoming Tetramino at the middle of the Pane paneUpcomingTetraminos
-     * @param matrix int[][] parameter - the 2D int matrix that represents the middle upcoming Tetramino
      */
-    private void drawUpcomingTetraminoMiddle(int[][] matrix) {
-        Rectangle currentBlock;
-
-        for (int row = 0; row < matrix.length; row++) {
-            for (int col = 0; col < matrix[row].length; col++) {
-                if (matrix[row][col] != 0) {
-                    currentBlock = new Rectangle(30 + START_X_UPCOMING_TETRAMINOS + (BLOCK_SIZE * col),
-                            (START_Y_UPCOMING_TETRAMINOS + dimensions_upcomingTetraminoDistanceToMiddle)
-                                    + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
-
-                    currentBlock.setFill(getBlockColor(upcomingTetraminoTypeMiddle));
-
-                    currentBlock.setStroke(colorBorder);
-
-                    upcomingMiddleBlocks[row][col] = currentBlock;
-
-                    paneUpcomingTetraminos.getChildren().add(currentBlock);
+    private void drawUpcomingTetraminoMiddle() {
+        for (int row = 0; row < upcomingTetraminoMiddleMatrix.length; row++) {
+            for (int col = 0; col < upcomingTetraminoMiddleMatrix[row].length; col++) {
+                if (upcomingTetraminoMiddleMatrix[row][col] != 0) {
+                    drawBlock(
+                            paneUpcomingTetraminos,
+                            upcomingMiddleBlocks,
+                            (30 + START_X_UPCOMING_TETRAMINOS),
+                            (START_Y_UPCOMING_TETRAMINOS + dimensions_upcomingTetraminoDistanceToMiddle),
+                            row, col,
+                            upcomingTetraminoTypeMiddle
+                    );
                 }
             }
         }
@@ -928,9 +944,9 @@ public class Main extends Application {
         Color color = getBlockColor(upcomingTetraminoTypeMiddle);
         Block upcomingTetraminoMiddleBlock = new Block(color);
 
-        int[][] upcomingTetraminMiddleMatrix = upcomingTetraminoMiddleBlock.getBlockMatrix(upcomingTetraminoTypeMiddle, 0);
+        upcomingTetraminoMiddleMatrix = upcomingTetraminoMiddleBlock.getBlockMatrix(upcomingTetraminoTypeMiddle, 0);
 
-        drawUpcomingTetraminoMiddle(upcomingTetraminMiddleMatrix);
+        drawUpcomingTetraminoMiddle();
     }
 
 
@@ -948,25 +964,19 @@ public class Main extends Application {
 
     /**
      * Draws the bottom upcoming Tetramino at the bottom of the Pane paneUpcomingTetraminos
-     * @param matrix int[][] parameter - the 2D int matrix that represents the bottom upcoming Tetramino
      */
-    private void drawUpcomingTetraminoBottom(int[][] matrix) {
-        Rectangle currentBlock;
-
-        for (int row = 0; row < matrix.length; row++) {
-            for (int col = 0; col < matrix[row].length; col++) {
-                if (matrix[row][col] != 0) {
-                    currentBlock = new Rectangle(30 + START_X_UPCOMING_TETRAMINOS + (BLOCK_SIZE * col),
-                            (START_Y_UPCOMING_TETRAMINOS + dimensions_upcomingTetraminoDistanceToBottom)
-                                    + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
-
-                    currentBlock.setFill(getBlockColor(upcomingTetraminoTypeBottom));
-
-                    currentBlock.setStroke(colorBorder);
-
-                    upcomingBottomBlocks[row][col] = currentBlock;
-
-                    paneUpcomingTetraminos.getChildren().add(currentBlock);
+    private void drawUpcomingTetraminoBottom() {
+        for (int row = 0; row < upcomingTetraminoBottomMatrix.length; row++) {
+            for (int col = 0; col < upcomingTetraminoBottomMatrix[row].length; col++) {
+                if (upcomingTetraminoBottomMatrix[row][col] != 0) {
+                    drawBlock(
+                            paneUpcomingTetraminos,
+                            upcomingBottomBlocks,
+                            (30 + START_X_UPCOMING_TETRAMINOS),
+                            (START_Y_UPCOMING_TETRAMINOS + dimensions_upcomingTetraminoDistanceToBottom),
+                            row, col,
+                            upcomingTetraminoTypeBottom
+                    );
                 }
             }
         }
@@ -984,9 +994,9 @@ public class Main extends Application {
         Color color = getBlockColor(upcomingTetraminoTypeBottom);
         Block upcomingTetraminoBottomBlock = new Block(color);
 
-        int[][] upcomingTetraminoBottomMatrix = upcomingTetraminoBottomBlock.getBlockMatrix(upcomingTetraminoTypeBottom, 0);
+        upcomingTetraminoBottomMatrix = upcomingTetraminoBottomBlock.getBlockMatrix(upcomingTetraminoTypeBottom, 0);
 
-        drawUpcomingTetraminoBottom(upcomingTetraminoBottomMatrix);
+        drawUpcomingTetraminoBottom();
     }
 
 
@@ -1090,7 +1100,7 @@ public class Main extends Application {
         if (canFallingTetraminoRotateCounterClockwise()) {
             rotateFallingTetraminoCounterClockwise();
         } else {
-            eraseFallingTetramino();
+            eraseAndRemoveFallingTetramino();
         }
         placeFallingTetraminoIntoBoardMatrix();
         drawFallingTetramino();
@@ -1104,7 +1114,7 @@ public class Main extends Application {
         if (canFallingTetraminoRotateClockwise()) {
             rotateFallingTetraminoClockwise();
         } else {
-            eraseFallingTetramino();
+            eraseAndRemoveFallingTetramino();
         }
         placeFallingTetraminoIntoBoardMatrix();
         drawFallingTetramino();
@@ -1196,13 +1206,6 @@ public class Main extends Application {
             closePauseMenu();
         });
 
-        scenePauseMenu.setOnKeyPressed(e -> {
-            if (e.getCode() == controlButtonPause) {
-                scenePauseMenu.getWindow().hide();
-                resumeGame();
-            }
-        });
-
         btnResume.setOnMouseClicked(e -> {
             closePauseMenu();
         });
@@ -1213,9 +1216,26 @@ public class Main extends Application {
             }
         });
 
+        btnReset.setOnMouseClicked(e -> {
+            resetGame();
+        });
+
+        btnReset.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+                resetGame();
+            }
+        });
+
         btnOptions.setOnMouseClicked(e -> {
             stagePause.close();
             openOptionsMenu();
+        });
+
+        btnOptions.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+                closeStage(stagePause);
+                openOptionsMenu();
+            }
         });
 
         btnExit.setOnMouseClicked(e -> {
@@ -1447,44 +1467,59 @@ public class Main extends Application {
         gridPaneColorOptionsMenu.setConstraints(lblTetriminoColors, 0, 0);
         Label lblColorOBlock = new Label("O-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorOBlock, 0, 1);
-        ColorPicker colorPickerOBlock = new ColorPicker();
+        ColorPicker colorPickerOBlock = new ColorPicker(colorOBlock);
+        colorPickerOBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerOBlock, 1, 1);
         Label lblColorIBlock = new Label("I-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorIBlock, 0, 2);
-        ColorPicker colorPickerIBlock = new ColorPicker();
+        ColorPicker colorPickerIBlock = new ColorPicker(colorIBlock);
+        colorPickerIBlock.getStyleClass().add("split-button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerIBlock, 1, 2);
         Label lblColorSBlock = new Label("S-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorSBlock, 0, 3);
-        ColorPicker colorPickerSBlock = new ColorPicker();
+        ColorPicker colorPickerSBlock = new ColorPicker(colorSBlock);
         gridPaneColorOptionsMenu.setConstraints(colorPickerSBlock, 1, 3);
         Label lblColorZBlock = new Label("Z-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorZBlock, 0, 4);
-        ColorPicker colorPickerZBlock = new ColorPicker();
+        ColorPicker colorPickerZBlock = new ColorPicker(colorZBlock);
         gridPaneColorOptionsMenu.setConstraints(colorPickerZBlock, 1, 4);
         Label lblColorLBlock = new Label("L-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorLBlock, 0, 5);
-        ColorPicker colorPickerLBlock = new ColorPicker();
+        ColorPicker colorPickerLBlock = new ColorPicker(colorLBlock);
         gridPaneColorOptionsMenu.setConstraints(colorPickerLBlock, 1, 5);
         Label lblColorJBlock = new Label("J-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorJBlock, 0, 6);
-        ColorPicker colorPickerJBlock = new ColorPicker();
+        ColorPicker colorPickerJBlock = new ColorPicker(colorJBlock);
         gridPaneColorOptionsMenu.setConstraints(colorPickerJBlock, 1, 6);
         Label lblColorTBlock = new Label("T-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorTBlock, 0, 7);
-        ColorPicker colorPickerTBlock = new ColorPicker();
+        ColorPicker colorPickerTBlock = new ColorPicker(colorTBlock);
         gridPaneColorOptionsMenu.setConstraints(colorPickerTBlock, 1, 7);
         Label lblMoreColorOptions = new Label("More Color Options");
         gridPaneColorOptionsMenu.setConstraints(lblMoreColorOptions, 0, 8);
-        Label lblColorBlockBorder = new Label("Block Border");
-        gridPaneColorOptionsMenu.setConstraints(lblColorBlockBorder, 0, 9);
-        ColorPicker colorPickerBlockBorder = new ColorPicker();
-        gridPaneColorOptionsMenu.setConstraints(colorPickerBlockBorder, 1, 9);
+        Label lblColorBlockBorderAndGrid = new Label("Block Border / Grid Color");
+        gridPaneColorOptionsMenu.setConstraints(lblColorBlockBorderAndGrid, 0, 9);
+        ColorPicker colorPickerBlockBorderAndGrid = new ColorPicker(colorBorder);
+        gridPaneColorOptionsMenu.setConstraints(colorPickerBlockBorderAndGrid, 1, 9);
         Label lblColorGameBoard = new Label("Game Board");
         gridPaneColorOptionsMenu.setConstraints(lblColorGameBoard, 0, 10);
-        ColorPicker colorPickerGameBoard = new ColorPicker();
+        ColorPicker colorPickerGameBoard = new ColorPicker(colorEmptyBlock);
         gridPaneColorOptionsMenu.setConstraints(colorPickerGameBoard, 1, 10);
+        Label lblGrid = new Label("Grid");
+        ToggleGroup toggleGroupGrid = new ToggleGroup();
+        RadioButton rdoBtnHideGrid = new RadioButton("Hide Grid");
+        rdoBtnHideGrid.setToggleGroup(toggleGroupGrid);
+        rdoBtnHideGrid.setSelected(true);
+        RadioButton rdoBtnShowGrid = new RadioButton("Show Grid");
+        rdoBtnShowGrid.setToggleGroup(toggleGroupGrid);
+        // gridPaneColorOptionsMenu.setConstraints(colorPickerGameBoard, 1, 10);
+        gridPaneColorOptionsMenu.setConstraints(lblGrid, 0, 11);
+        gridPaneColorOptionsMenu.setConstraints(rdoBtnHideGrid, 1, 11);
+        gridPaneColorOptionsMenu.setConstraints(rdoBtnShowGrid, 1, 12);
+        // ColorPicker colorPickerGameBoardWithBlockBorders = new ColorPicker(colorEmptyBlock);
+        // gridPaneColorOptionsMenu.setConstraints(colorPickerGameBoardWithBlockBorders, 1, 11);
         Button btnBack = new Button("Back");
-        gridPaneColorOptionsMenu.setConstraints(btnBack, 0, 11);
+        gridPaneColorOptionsMenu.setConstraints(btnBack, 0, 13);
 
         gridPaneColorOptionsMenu.getChildren().addAll(
                 lblTetriminoColors,
@@ -1496,8 +1531,10 @@ public class Main extends Application {
                 lblColorJBlock, colorPickerJBlock,
                 lblColorTBlock, colorPickerTBlock,
                 lblMoreColorOptions,
-                lblColorBlockBorder, colorPickerBlockBorder,
+                lblColorBlockBorderAndGrid, colorPickerBlockBorderAndGrid,
                 lblColorGameBoard, colorPickerGameBoard,
+                lblGrid,
+                rdoBtnHideGrid, rdoBtnShowGrid,
                 btnBack
         );
 
@@ -1529,10 +1566,9 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerOBlock.getValue();
                 setColorOBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(1);
+                drawAllBlocks(1);
             }
         });
 
@@ -1540,10 +1576,9 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerIBlock.getValue();
                 setColorIBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(2);
+                drawAllBlocks(2);
             }
         });
 
@@ -1551,10 +1586,9 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerSBlock.getValue();
                 setColorSBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(3);
+                drawAllBlocks(3);
             }
         });
 
@@ -1562,10 +1596,9 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerZBlock.getValue();
                 setColorZBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(4);
+                drawAllBlocks(4);
             }
         });
 
@@ -1573,10 +1606,9 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerLBlock.getValue();
                 setColorLBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(5);
+                drawAllBlocks(5);
             }
         });
 
@@ -1584,10 +1616,9 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerJBlock.getValue();
                 setColorJBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(6);
+                drawAllBlocks(6);
             }
         });
 
@@ -1595,36 +1626,206 @@ public class Main extends Application {
             public void handle(Event t) {
                 Color c = colorPickerTBlock.getValue();
                 setColorTBlock(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(7);
+                drawAllBlocks(7);
             }
         });
 
-        colorPickerBlockBorder.setOnAction(new EventHandler() {
+        colorPickerBlockBorderAndGrid.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerBlockBorder.getValue();
+                Color c = colorPickerBlockBorderAndGrid.getValue();
                 setColorBorder(c);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+
+                eraseAllBlocks(holdTetraminoType);
+                drawAllBlocks(holdTetraminoType);
             }
         });
 
         colorPickerGameBoard.setOnAction(new EventHandler() {
             public void handle(Event t) {
                 Color c = colorPickerGameBoard.getValue();
-                String colorHexString = toRGBCode(c);
                 setColorEmptyBlock(c);
-                paneGameBoard.setStyle("-fx-background-color: " + colorHexString);
-                // BELOW METHODS WILL ERASE THE BOARD AND DRAW ALL THE BLOCKS AGAIN TO UPDATE COLORS
-                // CURRENTLY NOT WORKING CORRECTLY (I believe drawBoard() is the issue)
-//                eraseBoard();
-//                drawBoard();
+                eraseBoard();
+                drawGameBoardBackground();
+                drawBoard();
+                drawFallingTetramino();
             }
         });
+
+        toggleGroupGrid.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+            @Override
+            public void changed(ObservableValue<? extends Toggle> observable, Toggle oldValue, Toggle newValue) {
+                if (toggleGroupGrid.getSelectedToggle() != null) {
+                    if (toggleGroupGrid.getSelectedToggle() == rdoBtnHideGrid) {
+                        Color c = colorPickerGameBoard.getValue();
+                        setColorEmptyBlock(c);
+                        eraseBoard();
+                        drawBorders(
+                                paneGameBoard, START_X_BOARD, START_Y_BOARD,
+                                dimensions_boardWidth, dimensions_boardHeight
+                        );
+                        drawGameBoardBackground();
+                        drawBoard();
+                        drawFallingTetramino();
+                    } else {
+                        Color c = colorPickerGameBoard.getValue();
+                        setColorEmptyBlock(c);
+                        eraseBoard();
+                        drawGameBoardBackgroundWithGrid();
+                        drawBoard();
+                        drawFallingTetramino();
+                    }
+                }
+            }
+        });
+    }
+
+
+    /**
+     * NOT WORKING CORRECTLY
+     */
+    private void resetGame() {
+        resetScoreAndScoreLabel();
+        resetLevelAndLevelLabel();
+        resetClearedLinesAndClearedLinesLabel();
+        eraseBoard();
+        eraseAndRemoveFallingTetramino();
+
+//        currentRowBoard = startRowBoard;
+//        currentColBoard = startColBoard;
+//
+        eraseAllBlocks(holdTetraminoType);
+        resetIntBlockMatrixes();
+        resetRectangleBlockMatrixes();
+        closePauseMenu();
+//        drawAllBlocks(holdTetraminoType);
+//        drawBoard();
+//        drawFallingTetramino();
+//        playGame();
+//        init();
+//        playGame();
+    }
+
+
+    /**
+     * Resets score to zero and resets the score value display Label to display "0"
+     */
+    private void resetScoreAndScoreLabel() {
+        paneScoreDisplay.getChildren().remove(lblScoreValue);
+        score = 0;
+        lblScoreValue.setText(String.valueOf(score));
+        paneScoreDisplay.getChildren().add(lblScoreValue);
+    }
+
+
+    /**
+     * Resets level to zero and resets the level value display Label to display "00"
+     */
+    private void resetLevelAndLevelLabel() {
+        paneLevelDisplay.getChildren().remove(lblLevelValue);
+        level = 0;
+        levelString = String.format("%02d", level);
+        lblLevelValue.setText(levelString);
+        paneLevelDisplay.getChildren().add(lblLevelValue);
+    }
+
+
+    /**
+     * Resets numberOfClearedLines to zero and resets the cleared lines value display Label to display "0"
+     */
+    private void resetClearedLinesAndClearedLinesLabel() {
+        paneClearedLinesDisplay.getChildren().remove(lblClearedLinesValue);
+        numberOfRowsCleared = 0;
+
+        lblClearedLinesValue.setText(String.valueOf(numberOfRowsCleared));
+        paneClearedLinesDisplay.getChildren().add(lblClearedLinesValue);
+    }
+
+
+    /**
+     * Resets all the 2-dimensional Rectangle matrixes to be full of null Rectangles
+     */
+    private void resetRectangleBlockMatrixes() {
+        blocks = new Rectangle[boardMatrix.length][boardMatrix[0].length];
+        holdBlocks = new Rectangle[4][4];
+        nextBlocks = new Rectangle[4][4];
+        upcomingTopBlocks = new Rectangle[4][4];
+        upcomingMiddleBlocks = new Rectangle[4][4];
+        upcomingBottomBlocks = new Rectangle[4][4];
+    }
+
+
+    /**
+     * Resets all the 2-dimensional int matrixes to be full of zeroes
+     */
+    private void resetIntBlockMatrixes() {
+        boardMatrix = new int[numOfRowsBoard][numOfColsBoard];
+
+        tetraminoMatrix = new int[numOfRowsTetramino][numOfColsTetramino];
+
+        holdTetraminoMatrix = new int[4][4];
+        nextTetraminoMatrix = new int[4][4];
+        upcomingTetraminoTopMatrix = new int[4][4];
+        upcomingTetraminoMiddleMatrix = new int[4][4];
+        upcomingTetraminoBottomMatrix = new int[4][4];
+    }
+
+
+    /**
+     * Draws the current hold Tetramino Rectangle blocks in the Pane paneHoldTetramino and
+     * sets the value of isHoldTetraminoBoxEmpty to false
+     */
+    private void drawHoldTetramino() {
+        for (int row = 0; row < holdTetraminoMatrix.length; row ++) {
+            for (int col = 0; col < holdTetraminoMatrix[row].length; col++) {
+                if (holdTetraminoMatrix[row][col] != 0) {
+                    drawBlock(
+                            paneHoldTetramino, holdBlocks,
+                            (30 + START_X_HOLD_TETRAMINO), (60 + START_Y_HOLD_TETRAMINO),
+                            row, col,
+                            holdTetraminoType
+                    );
+                }
+            }
+        }
+
+        isHoldTetraminoBoxEmpty = false;
+    }
+
+
+    /**
+     * Erases all the Rectangle blocks from every Pane
+     * @param tetraminoType int parameter - the Tetramino type for the hold Tetramino
+     */
+    private void eraseAllBlocks(int tetraminoType) {
+        if (!isHoldTetraminoBoxEmpty && holdTetraminoType == tetraminoType) {
+            eraseHoldTetramino();
+        }
+
+        eraseBoard();
+        eraseAndRemoveFallingTetramino();
+        eraseNextTetramino();
+        eraseUpcomingTetraminoTop();
+        eraseUpcomingTetraminoMiddle();
+        eraseUpcomingTetraminoBottom();
+    }
+
+
+    /**
+     * Draws all the Rectangle blocks from the 2-dimensional Rectangle matrixes in their respective Panes
+     * @param tetraminoType int parameter - the Tetramino type of the hold Tetramino
+     */
+    private void drawAllBlocks(int tetraminoType) {
+        if (isHoldTetraminoBoxEmpty && holdTetraminoType == tetraminoType) {
+            drawHoldTetramino();
+        }
+        drawBoard();
+        drawFallingTetramino();
+        drawNextTetramino();
+        drawUpcomingTetraminoTop();
+        drawUpcomingTetraminoMiddle();
+        drawUpcomingTetraminoBottom();
     }
 
 
@@ -1634,10 +1835,12 @@ public class Main extends Application {
      * @return String of the Hexadecimal value of the Color passed in
      */
     public String toRGBCode(Color color) {
-        return String.format( "#%02X%02X%02X",
-                (int)( color.getRed() * 255 ),
-                (int)( color.getGreen() * 255 ),
-                (int)( color.getBlue() * 255 ) );
+        return String.format(
+                "#%02X%02X%02X",
+                (int)(color.getRed() * 255),
+                (int)(color.getGreen() * 255),
+                (int)(color.getBlue() * 255)
+        );
     }
 
 
@@ -1667,16 +1870,34 @@ public class Main extends Application {
      */
     private void incrementLevel() {
         timer.stop();
+
         incrementAndDisplayLevel();
+        setGameSpeed();
 
-        // THIS IS NOT CURRENTLY WORKING - FIGURE OUT WHY AND REFACTOR
-        if (speed - 80 >= 80) {
-            speed -= 80;
+        runGameAtSpecifiedSpeed(speed);
+    }
+
+
+    /**
+     * Sets the game speed that corresponds to the current level
+     */
+    private void setGameSpeed() {
+        switch (level) {
+            case 1:     speed = 720;    break;
+            case 2:     speed = 640;    break;
+            case 3:     speed = 560;    break;
+            case 4:     speed = 480;    break;
+            case 5:     speed = 400;    break;
+            case 6:     speed = 320;    break;
+            case 7:     speed = 240;    break;
+            case 8:     speed = 160;    break;
+            case 9:     speed = 128;    break;
+            case 10:    speed = 112;    break;
+            case 13:    speed = 96;     break;
+            case 16:    speed = 80;     break;
+            case 19:    speed = 64;     break;
+            default:    break;
         }
-
-        timer.setCycleCount(Timeline.INDEFINITE);
-        timer.rateProperty().bind(new SimpleDoubleProperty(1.0).multiply(1.1));
-        timer.play();
     }
 
 
@@ -1703,7 +1924,7 @@ public class Main extends Application {
             if (wasARowCompleted()) {
                 setLowestOccupiedRowAfterClearingARow();
                 eraseBoard();
-                createBoardBlocks();
+                instantiateAndPopulateNewBlocks2DRectangleMatrix();
                 drawBoard();
                 incrementAndDisplayScore();
             }
@@ -1728,7 +1949,7 @@ public class Main extends Application {
      * @param tetraminoType int parameter - int representation of the type of Tetramino to generate
      */
     private void generateFallingTetraminoFromHoldTetramino(int tetraminoType) {
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
         eraseHoldTetramino();
 
         fallingTetraminoType = holdTetraminoType;
@@ -1758,7 +1979,6 @@ public class Main extends Application {
         for (int row = 0; row < holdBlocks.length; row++) {
             for (int col = 0; col < holdBlocks[row].length; col++) {
                 paneHoldTetramino.getChildren().remove(holdBlocks[row][col]);
-                holdBlocks[row][col] = null;
             }
         }
 
@@ -1771,34 +1991,15 @@ public class Main extends Application {
      * summoned on command to be the current falling Tetramino
      */
     private void reserveFallingTetraminoInHoldBox() {
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
         holdTetraminoType = fallingTetraminoType;
         orientation = 0;
         Color color = getBlockColor(holdTetraminoType);
         Block holdTetraminoBlock = new Block(color);
 
-        int[][] holdTetraminoMatrix = holdTetraminoBlock.getBlockMatrix(holdTetraminoType, orientation);
+        holdTetraminoMatrix = holdTetraminoBlock.getBlockMatrix(holdTetraminoType, orientation);
 
-        Rectangle currentBlock;
-
-        for (int row = 0; row < holdTetraminoMatrix.length; row++) {
-            for (int col = 0; col < holdTetraminoMatrix[row].length; col++) {
-                if (holdTetraminoMatrix[row][col] != 0) {
-                    currentBlock = new Rectangle(30 + START_X_HOLD_TETRAMINO + (BLOCK_SIZE * col),
-                            60 + START_Y_HOLD_TETRAMINO + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
-
-                    currentBlock.setFill(getBlockColor(holdTetraminoType));
-
-                    currentBlock.setStroke(colorBorder);
-
-                    holdBlocks[row][col] = currentBlock;
-
-                    paneHoldTetramino.getChildren().add(currentBlock);
-                }
-            }
-        }
-
-        isHoldTetraminoBoxEmpty = false;
+        drawHoldTetramino();
     }
 
 
@@ -1813,9 +2014,9 @@ public class Main extends Application {
         Color color = getBlockColor(nextTetraminoType);
         Block nextTetraminoBlock = new Block(color);
 
-        int[][] nextTetraminMatrix = nextTetraminoBlock.getBlockMatrix(nextTetraminoType, 0);
+        nextTetraminoMatrix = nextTetraminoBlock.getBlockMatrix(nextTetraminoType, 0);
 
-        drawNextTetramino(nextTetraminMatrix);
+        drawNextTetramino();
     }
 
 
@@ -1830,9 +2031,9 @@ public class Main extends Application {
         Color color = getBlockColor(upcomingTetraminoTypeTop);
         Block upcomingTetraminoTopBlock = new Block(color);
 
-        int[][] upcomingTetraminTopMatrix = upcomingTetraminoTopBlock.getBlockMatrix(upcomingTetraminoTypeTop, 0);
+        upcomingTetraminoTopMatrix = upcomingTetraminoTopBlock.getBlockMatrix(upcomingTetraminoTypeTop, 0);
 
-        drawUpcomingTetraminoTop(upcomingTetraminTopMatrix);
+        drawUpcomingTetraminoTop();
     }
 
 
@@ -1847,9 +2048,9 @@ public class Main extends Application {
         Color color = getBlockColor(upcomingTetraminoTypeMiddle);
         Block upcomingTetraminoMiddleBlock = new Block(color);
 
-        int[][] upcomingTetraminMiddleMatrix = upcomingTetraminoMiddleBlock.getBlockMatrix(upcomingTetraminoTypeMiddle, 0);
+        upcomingTetraminoMiddleMatrix = upcomingTetraminoMiddleBlock.getBlockMatrix(upcomingTetraminoTypeMiddle, 0);
 
-        drawUpcomingTetraminoMiddle(upcomingTetraminMiddleMatrix);
+        drawUpcomingTetraminoMiddle();
     }
 
 
@@ -1864,9 +2065,9 @@ public class Main extends Application {
         Color color = getBlockColor(upcomingTetraminoTypeBottom);
         Block upcomingTetraminoBottomBlock = new Block(color);
 
-        int[][] upcomingTetraminoBottomMatrix = upcomingTetraminoBottomBlock.getBlockMatrix(upcomingTetraminoTypeBottom, 0);
+        upcomingTetraminoBottomMatrix = upcomingTetraminoBottomBlock.getBlockMatrix(upcomingTetraminoTypeBottom, 0);
 
-        drawUpcomingTetraminoBottom(upcomingTetraminoBottomMatrix);
+        drawUpcomingTetraminoBottom();
     }
 
 
@@ -2058,7 +2259,7 @@ public class Main extends Application {
      * @return boolean value (true - can move left, false - can not move left)
      */
     private boolean canFallingTetraminoMoveLeftOneColumn() {
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
 
         for (int i = 0; i < fallingTetraminoBlocksCoordinates.size(); i++) {
             if (fallingTetraminoBlocksCoordinates.get(i)[1] == 0 ||
@@ -2088,7 +2289,7 @@ public class Main extends Application {
      * @return boolean value (true - can move right, false - can not move right)
      */
     private boolean canFallingTetraminoMoveRightOneColumn() {
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
 
         int numOfColsTetramino = getFallingTetraminoWidth();
 
@@ -2165,7 +2366,7 @@ public class Main extends Application {
         int[][] temporaryTetraminoMatrix = tetraminoBlock.getBlockMatrix(fallingTetraminoType, desiredOrientation);
         List<int[]> temporaryFallingTetraminoBlocksCoordinates = new ArrayList<>();
 
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
 
         temporaryFallingTetraminoBlocksCoordinates = getFallingTetraminoBlocksCoordinatesAsArrayList(temporaryTetraminoMatrix);
 
@@ -2244,7 +2445,7 @@ public class Main extends Application {
         int[][] temporaryTetraminoMatrix = tetraminoBlock.getBlockMatrix(fallingTetraminoType, desiredOrientation);
         List<int[]> temporaryFallingTetraminoBlocksCoordinates = new ArrayList<>();
 
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
 
         temporaryFallingTetraminoBlocksCoordinates = getFallingTetraminoBlocksCoordinatesAsArrayList(temporaryTetraminoMatrix);
 
@@ -2325,7 +2526,7 @@ public class Main extends Application {
      * @return boolean value (true - can move down, false - can not move down)
      */
     private boolean canFallingTetraminoMoveDownOneRow() {
-        eraseFallingTetramino();
+        eraseAndRemoveFallingTetramino();
 
         if (currentRowBoard + tetraminoHeight >= boardMatrix.length) {
             return false;
@@ -2365,7 +2566,7 @@ public class Main extends Application {
     /**
      * Remove the current falling tetramino from int[][] boardMatrix and Pane paneGameBoard
      */
-    private void eraseFallingTetramino() {
+    private void eraseAndRemoveFallingTetramino() {
         for (int i = 0; i < fallingTetraminoBlocksCoordinates.size(); i++) {
             boardMatrix[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]] = 0;
             paneGameBoard.getChildren().remove(blocks[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]]);
@@ -2380,17 +2581,38 @@ public class Main extends Application {
      */
     private void drawFallingTetramino() {
         for (int i = 0; i < fallingTetraminoBlocksCoordinates.size(); i++) {
-            Rectangle currentBlock = new Rectangle(START_X_BOARD + (BLOCK_SIZE * fallingTetraminoBlocksCoordinates.get(i)[1]),
-                    START_Y_BOARD + (BLOCK_SIZE * fallingTetraminoBlocksCoordinates.get(i)[0]), BLOCK_SIZE, BLOCK_SIZE);
-
-            currentBlock.setFill(getBlockColor(boardMatrix[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]]));
-
-            currentBlock.setStroke(colorBorder);
-
-            blocks[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]] = currentBlock;
-
-            paneGameBoard.getChildren().add(currentBlock);
+            drawBlock(
+                    paneGameBoard, blocks,
+                    START_X_BOARD, START_Y_BOARD,
+                    fallingTetraminoBlocksCoordinates.get(i)[0], fallingTetraminoBlocksCoordinates.get(i)[1],
+                    fallingTetraminoType
+            );
         }
+    }
+
+
+    /**
+     * Draws a single Rectangle block in specified Pane
+     * @param pane Pane parameter - the Pane to draw the Rectangle block in
+     * @param array Rectangle[][] parameter - 2-dimensional Rectangle array to store the Rectangles in
+     * @param startX int parameter - x-coordinate base to be summed with xCoord parameter to start drawing
+     * @param startY int parameter - y-coordinate base to be summed with yCoord parameter to start drawing
+     * @param xCoord int parameter - value to be summed with startX parameter to start drawing
+     * @param yCoord int parameter - value to be summed with startY parameter to start drawing
+     * @param blockType int parameter - int value that represents the type of Tetramino being drawn (determines Color)
+     */
+    private void drawBlock(
+            Pane pane, Rectangle[][] array, int startX, int startY, int xCoord, int yCoord, int blockType
+    )
+    {
+        Rectangle currentBlock = new Rectangle(startX + (BLOCK_SIZE * yCoord),
+                startY + (BLOCK_SIZE * xCoord), BLOCK_SIZE, BLOCK_SIZE);
+
+        currentBlock.setFill(getBlockColor(blockType));
+        currentBlock.setStroke(colorBorder);
+        array[xCoord][yCoord] = currentBlock;
+
+        pane.getChildren().add(currentBlock);
     }
 
 
@@ -2532,7 +2754,6 @@ public class Main extends Application {
         for (int row = 0; row < boardMatrix.length; row++) {
             for (int col = 0; col < boardMatrix[row].length; col++) {
                 paneGameBoard.getChildren().remove(blocks[row][col]);
-                blocks[row][col] = null;
             }
         }
     }
@@ -2542,7 +2763,7 @@ public class Main extends Application {
      * Instantiates a new Rectangle[][] blocks and fills blocks with Rectangles
      * corresponding to any row and column index pair in int[][] boardMatrix that != 0
      */
-    private void createBoardBlocks() {
+    private void instantiateAndPopulateNewBlocks2DRectangleMatrix() {
         blocks = new Rectangle[boardMatrix.length][boardMatrix[0].length];
 
         for (int row = 0; row < boardMatrix.length; row++) {
@@ -2566,11 +2787,50 @@ public class Main extends Application {
      * Adds Rectangles to Pane paneGameBoard from int lowestOccupiedRow to the largest row and index pair
      */
     private void drawBoard() {
+        instantiateAndPopulateNewBlocks2DRectangleMatrix();
         for (int row = lowestOccupiedRow; row < blocks.length; row++) {
             for (int col = 0; col < blocks[row].length; col++) {
                 if (blocks[row][col] != null) {
                     paneGameBoard.getChildren().add(blocks[row][col]);
                 }
+            }
+        }
+    }
+
+
+    /**
+     * Colors the entire game board the Color specified in the class variable colorEmptyBlock
+     * *NOTE: Need to call drawBoard() and drawFallingTetramino() after this method
+     */
+    private void drawGameBoardBackground() {
+        for (int row = 0; row < boardMatrix.length; row++) {
+            for (int col = 0; col < boardMatrix[row].length; col++) {
+                Rectangle currentBlock = new Rectangle(START_X_BOARD + (BLOCK_SIZE * col),
+                        START_Y_BOARD + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
+
+                currentBlock.setFill(colorEmptyBlock);
+
+                paneGameBoard.getChildren().add(currentBlock);
+            }
+        }
+    }
+
+
+    /**
+     * Colors the entire game board the Color specified in the class variable colorEmptyBlock and
+     * draws the borders (.setStroke()) the color specified in the class variable colorBorder
+     * *NOTE: Need to call drawBoard() and drawFallingTetramino() after this method
+     */
+    private void drawGameBoardBackgroundWithGrid() {
+        for (int row = 0; row < boardMatrix.length; row++) {
+            for (int col = 0; col < boardMatrix[row].length; col++) {
+                Rectangle currentBlock = new Rectangle(START_X_BOARD + (BLOCK_SIZE * col),
+                        START_Y_BOARD + (BLOCK_SIZE * row), BLOCK_SIZE, BLOCK_SIZE);
+
+                currentBlock.setFill(colorEmptyBlock);
+                currentBlock.setStroke(colorBorder);
+
+                paneGameBoard.getChildren().add(currentBlock);
             }
         }
     }
