@@ -21,6 +21,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.text.NumberFormat;
 import java.util.*;
 
 public class Main extends Application {
@@ -43,6 +44,7 @@ public class Main extends Application {
     private Button btnHold;
     private Button btnPause;
     private Scene sceneControlOptions;
+    private NumberFormat formatNumberWithDelimiter;
     private Timeline timer;
     private Random random;
     private Pane paneGameBoard;
@@ -52,13 +54,13 @@ public class Main extends Application {
     private Pane paneNextTetramino;
     private Pane paneHoldTetramino;
     private Pane paneUpcomingTetraminos;
-    private VBox vBoxNextAndUpcomingTetraminos;
-    private GridPane gridPaneMain;
+    // private GridPane gridPaneMain;
     private Scene scene;
     private Label lblScoreValue;
     private Label lblLevelValue;
     private Label lblClearedLinesValue;
     private boolean isHoldTetraminoBoxEmpty;
+    private boolean hasSetControlButtonBeenClicked;
     private int dimensions_holdTetraminoWidth;
     private int dimensions_holdTetraminoHeight;
     private int dimensions_boardWidth;
@@ -90,8 +92,6 @@ public class Main extends Application {
     private int lowestOccupiedRow;
     private int numOfRowsBoard;
     private int numOfColsBoard;
-    private int numOfRowsTetramino;
-    private int numOfColsTetramino;
     private int simultaneousClearedRows;
     private int score;
     private int numberOfUniqueTetraminos;
@@ -123,20 +123,21 @@ public class Main extends Application {
     private Rectangle[][] upcomingTopBlocks;
     private Rectangle[][] upcomingMiddleBlocks;
     private Rectangle[][] upcomingBottomBlocks;
+    private KeyCode[] controlKeys;
     private Block tetraminoBlock;
     private Color colorOBlock, colorIBlock, colorSBlock, colorZBlock, colorLBlock, colorJBlock, colorTBlock,
             colorEmptyBlock;
     private Color colorBorder;
     private Stage stagePause;
     private Stage stageOptions;
-    private KeyCode controlButtonMoveLeft;
-    private KeyCode controlButtonMoveRight;
-    private KeyCode controlButtonSoftDrop;
-    private KeyCode controlButtonHardDrop;
-    private KeyCode controlButtonRotateClockwise;
-    private KeyCode controlButtonRotateCounterclockwise;
-    private KeyCode controlButtonHold;
-    private KeyCode controlButtonPause;
+    private KeyCode controlKeyMoveLeft;
+    private KeyCode controlKeyMoveRight;
+    private KeyCode controlKeySoftDrop;
+    private KeyCode controlKeyHardDrop;
+    private KeyCode controlKeyRotateClockwise;
+    private KeyCode controlKeyRotateCounterclockwise;
+    private KeyCode controlKeyHold;
+    private KeyCode controlKeyPause;
 
 
     public static void main(String[] args) {
@@ -168,39 +169,73 @@ public class Main extends Application {
 
         //////////////////////////////////////////// CONTROLS ////////////////////////////////////////////////////
         scene.setOnKeyPressed(e -> {
-            if (e.getCode() == controlButtonMoveLeft){
+            if (e.getCode() == controlKeyMoveLeft){
                 controlMoveLeftButton();
             }
-            else if (e.getCode() == controlButtonMoveRight) {
+            else if (e.getCode() == controlKeyMoveRight) {
                 controlMoveRightButton();
             }
-            else if (e.getCode() == controlButtonSoftDrop) {
+            else if (e.getCode() == controlKeySoftDrop) {
                 controlSoftDropButton();
             }
-            else if (e.getCode() == controlButtonHardDrop) {
+            else if (e.getCode() == controlKeyHardDrop) {
                 controlHardDropButton();
             }
-            else if (e.getCode() == controlButtonRotateCounterclockwise) {
-                controlRotateCounterclockwiseButton();
-            }
-            else if (e.getCode() == controlButtonRotateClockwise) {
+            else if (e.getCode() == controlKeyRotateClockwise) {
                 controlRotateClockwiseButton();
             }
-            else if (e.getCode() == controlButtonHold) {
+            else if (e.getCode() == controlKeyRotateCounterclockwise) {
+                controlRotateCounterclockwiseButton();
+            }
+            else if (e.getCode() == controlKeyHold) {
                 controlHoldButton();
             }
-            else if (e.getCode() == controlButtonPause) {
+            else if (e.getCode() == controlKeyPause) {
                 controlPauseButton();
             }
         });
 
+        /*
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        ERRORS:
+        1. CAN CLICK MULTIPLE BUTTONS AT A TIME
+        2. CAN CLICK A BUTTON AND THEN NOT SET THE KEY
+        3. CAN CLICK A BUTTON AND THEN BACK OUT OF THE CONTROL OPTIONS MENU
+        4. CAN SET MULTIPLE CONTROLS TO THE SAME KEY ------- SOLVED!!!!!!!
+
+        NEED TO IMPLEMENT:
+        1. IF USER DECIDES THEY DON'T WANT TO CHANGE THE KEY BINDING FOR AN ACTION, ALLOW THEM TO
+                CLICK THE BUTTON AGAIN TO CANCEL THE EventListener
+                Idea for implementation: Use a boolean value as a flag of whether the user has
+                                            clicked a Button yet. When the user clicks the Button:
+                                            boolean (hasBeenClicked) value:
+                                            true  - Set corresponding Label value to the name of
+                                                    the KeyCode key that has been assigned to
+                                                    that control and exit handler
+                                            false - Add EventListener as currently is
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+         */
         keyHandlerBtnMoveLeft = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonMoveLeft(key);
-                btnMoveLeft.setText(key.getName().toString());
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyMoveLeft(key);
+                    controlKeys[0] = key;
+                    btnMoveLeft.setText(key.getName());
+                } else {
+                    btnMoveLeft.setText(controlKeyMoveLeft.getName());
+                }
                 sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveLeft);
             }
         };
@@ -209,9 +244,15 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonMoveRight(key);
-                btnMoveRight.setText(key.getName().toString());
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyMoveRight(key);
+                    controlKeys[1] = key;
+                    btnMoveRight.setText(key.getName());
+                } else {
+                    btnMoveRight.setText(controlKeyMoveRight.getName());
+                }
                 sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveRight);
             }
         };
@@ -220,9 +261,15 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonSoftDrop(key);
-                btnSoftDrop.setText(key.getName().toString());
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeySoftDrop(key);
+                    controlKeys[2] = key;
+                    btnSoftDrop.setText(key.getName());
+                } else {
+                    btnSoftDrop.setText(controlKeySoftDrop.getName());
+                }
                 sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnSoftDrop);
             }
         };
@@ -231,21 +278,16 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonHardDrop(key);
-                btnHardDrop.setText(key.getName().toString());
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
-            }
-        };
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
 
-        keyHandlerBtnRotateCounterclockwise = new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonRotateCounterclockwise(key);
-                btnRotateCounterclockwise.setText(key.getName().toString());
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyHardDrop(key);
+                    controlKeys[3] = key;
+                    btnHardDrop.setText(key.getName());
+                } else {
+                    btnHardDrop.setText(controlKeyHardDrop.getName());
+                }
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
             }
         };
 
@@ -253,10 +295,33 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonRotateClockwise(key);
-                btnRotateClockwise.setText(key.getName().toString());
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyRotateClockwise(key);
+                    controlKeys[4] = key;
+                    btnRotateClockwise.setText(key.getName());
+                } else {
+                    btnRotateClockwise.setText(controlKeyRotateClockwise.getName());
+                }
                 sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateClockwise);
+            }
+        };
+
+        keyHandlerBtnRotateCounterclockwise = new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                KeyCode key = event.getCode();
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyRotateCounterclockwise(key);
+                    controlKeys[5] = key;
+                    btnRotateCounterclockwise.setText(key.getName());
+                } else {
+                    btnRotateCounterclockwise.setText(controlKeyRotateCounterclockwise.getName());
+                }
+                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
             }
         };
 
@@ -264,9 +329,15 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonHold(key);
-                btnHold.setText(key.getName().toString());
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyHold(key);
+                    controlKeys[6] = key;
+                    btnHold.setText(key.getName());
+                } else {
+                    btnHold.setText(controlKeyHold.getName());
+                }
                 sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHold);
             }
         };
@@ -275,9 +346,15 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 KeyCode key = event.getCode();
-                System.out.println(key.getName().toString());
-                setControlButtonPause(key);
-                btnPause.setText(key.getName().toString());
+                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+                if (indexOfOccupiedKey == -1) {
+                    setControlKeyPause(key);
+                    controlKeys[7] = key;
+                    btnPause.setText(key.getName());
+                } else {
+                    btnPause.setText(controlKeyPause.getName());
+                }
                 sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
             }
         };
@@ -295,25 +372,35 @@ public class Main extends Application {
         // Initialize Random variable
         random = new Random();
 
+        // Initialize NumberFormat object
+        formatNumberWithDelimiter = NumberFormat.getInstance();
+        formatNumberWithDelimiter.setGroupingUsed(true);
+
         // Set the default controls
-        controlButtonMoveLeft = KeyCode.LEFT;
-        controlButtonMoveRight = KeyCode.RIGHT;
-        controlButtonSoftDrop = KeyCode.DOWN;
-        controlButtonHardDrop = KeyCode.UP;
-        controlButtonRotateClockwise = KeyCode.D;
-        controlButtonRotateCounterclockwise = KeyCode.A;
-        controlButtonHold = KeyCode.W;
-        controlButtonPause = KeyCode.SPACE;
+        controlKeyMoveLeft = KeyCode.LEFT;
+        controlKeyMoveRight = KeyCode.RIGHT;
+        controlKeySoftDrop = KeyCode.DOWN;
+        controlKeyHardDrop = KeyCode.UP;
+        controlKeyRotateClockwise = KeyCode.D;
+        controlKeyRotateCounterclockwise = KeyCode.A;
+        controlKeyHold = KeyCode.W;
+        controlKeyPause = KeyCode.SPACE;
+        controlKeys = new KeyCode[] {
+                controlKeyMoveLeft, controlKeyMoveRight, controlKeySoftDrop, controlKeyHardDrop,
+                controlKeyRotateClockwise, controlKeyRotateCounterclockwise, controlKeyHold, controlKeyPause
+        };
 
         numberOfUniqueTetraminos = 7;
         numberOfRowsCleared = 0;
         level = 0;
+        score = 0;
 
         // Set the default size of the boardMatrix
         numOfRowsBoard = 20;
         numOfColsBoard = 10;
 
         isHoldTetraminoBoxEmpty = true;
+        hasSetControlButtonBeenClicked = false;
         holdTetraminoType = 0;
         nextTetraminoType = 0;
         upcomingTetraminoTypeTop = 0;
@@ -331,12 +418,12 @@ public class Main extends Application {
         dimensions_upcomingTetraminosHeight = (int)(BLOCK_SIZE * (38 / 3.0));
         dimensions_upcomingTetraminoDistanceToMiddle = (int)(BLOCK_SIZE * (13 / 3.0));
         dimensions_upcomingTetraminoDistanceToBottom = (int)(BLOCK_SIZE * (26 / 3.0));
-        dimensions_gameInformationWidth = BLOCK_SIZE * 10;
+        dimensions_gameInformationWidth = BLOCK_SIZE * 13;
         dimensions_gameInformationHeight = (int)(BLOCK_SIZE * (5 / 3.0));      // 50
         dimensions_gameInformationMargin = (int)(BLOCK_SIZE * (5 / 3.0));      // 50
 
         // Create GridPane to hold all the elements of the UI
-        gridPaneMain = new GridPane();
+        GridPane gridPaneMain = new GridPane();
         gridPaneMain.setPrefSize((BLOCK_SIZE * 20), (BLOCK_SIZE * (68 / 3.0))); // 600x680
 
 
@@ -366,7 +453,7 @@ public class Main extends Application {
         lblScoreValue = new Label();
         drawGameInformationTitleLabel(paneScoreDisplay, Color.RED, lblScoreValue, "Score: ",
                 48, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION);
-        drawGameInformationValueLabel(paneScoreDisplay, lblScoreValue, Color.RED, 48, String.valueOf(score),
+        drawGameInformationValueLabel(paneScoreDisplay, lblScoreValue, Color.RED, 48, formatNumberWithDelimiter.format(score),
                 START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION, dimensions_gameInformationWidth);
 
         paneLevelDisplay = new Pane();
@@ -410,13 +497,13 @@ public class Main extends Application {
 
         // Initialize the default beginning speed
         // Attempting to match NES Tetris speed (800 = speed of level 00, 720 = level 01, 640 = level 02)
-        speed = 480;
+        speed = 800;
 
         // Initialize the boardMatrix
         boardMatrix = new int[numOfRowsBoard][numOfColsBoard];
 
         // Set the default size of the tetraminoMatrix
-        tetraminoMatrix = new int[numOfRowsTetramino][numOfColsTetramino];
+        tetraminoMatrix = new int[4][4];
 
         // Initialize the rest of the matrixes
         holdTetraminoMatrix = new int[4][4];
@@ -501,8 +588,8 @@ public class Main extends Application {
      * @param key KeyCode parameter - KeyCode for the keyboard button to assign
      *            moving Tetramino left one column to
      */
-    private void setControlButtonMoveLeft(KeyCode key) {
-        controlButtonMoveLeft = key;
+    private void setControlKeyMoveLeft(KeyCode key) {
+        controlKeyMoveLeft = key;
     }
 
 
@@ -511,8 +598,8 @@ public class Main extends Application {
      * @param key KeyCode parameter - KeyCode for the keyboard button to assign
      *            moving Tetramino right one column to
      */
-    private void setControlButtonMoveRight(KeyCode key) {
-        controlButtonMoveRight = key;
+    private void setControlKeyMoveRight(KeyCode key) {
+        controlKeyMoveRight = key;
     }
 
 
@@ -521,8 +608,8 @@ public class Main extends Application {
      * @param key KeyCode parameter - KeyCode for the keyboard button to assign
      *            moving Tetramino down one row to
      */
-    private void setControlButtonSoftDrop(KeyCode key) {
-        controlButtonSoftDrop = key;
+    private void setControlKeySoftDrop(KeyCode key) {
+        controlKeySoftDrop = key;
     }
 
 
@@ -532,17 +619,8 @@ public class Main extends Application {
      * @param key KeyCode parameter - KeyCode for the keyboard button to assign
      *            moving Tetramino down as many rows as possible until the Tetramino is in place
      */
-    private void setControlButtonHardDrop(KeyCode key) {
-        controlButtonHardDrop = key;
-    }
-
-    /**
-     * Set which keyboard button rotates the Tetramino counterclockwise
-     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
-     *            rotating Tetramino counterclockwise
-     */
-    private void setControlButtonRotateCounterclockwise(KeyCode key) {
-        controlButtonRotateCounterclockwise = key;
+    private void setControlKeyHardDrop(KeyCode key) {
+        controlKeyHardDrop = key;
     }
 
 
@@ -551,8 +629,18 @@ public class Main extends Application {
      * @param key KeyCode parameter - KeyCode for the keyboard button to assign
      *            rotating Tetramino clockwise
      */
-    private void setControlButtonRotateClockwise(KeyCode key) {
-        controlButtonRotateClockwise = key;
+    private void setControlKeyRotateClockwise(KeyCode key) {
+        controlKeyRotateClockwise = key;
+    }
+
+
+    /**
+     * Set which keyboard button rotates the Tetramino counterclockwise
+     * @param key KeyCode parameter - KeyCode for the keyboard button to assign
+     *            rotating Tetramino counterclockwise
+     */
+    private void setControlKeyRotateCounterclockwise(KeyCode key) {
+        controlKeyRotateCounterclockwise = key;
     }
 
 
@@ -563,8 +651,8 @@ public class Main extends Application {
      *            moving the current falling Tetramino into the hold Tetramino box or
      *            moves the Tetramino in the hold Tetramino box to the current falling Tetramino
      */
-    private void setControlButtonHold(KeyCode key) {
-        controlButtonHold = key;
+    private void setControlKeyHold(KeyCode key) {
+        controlKeyHold = key;
     }
 
 
@@ -573,8 +661,8 @@ public class Main extends Application {
      * @param key KeyCode parameter - KeyCode for the keyboard button to assign
      *            to pausing/resuming the game
      */
-    private void setControlButtonPause(KeyCode key) {
-        controlButtonPause = key;
+    private void setControlKeyPause(KeyCode key) {
+        controlKeyPause = key;
     }
 
 
@@ -676,7 +764,7 @@ public class Main extends Application {
     ) {
         Font font = new Font(fontSize);
 
-        lbl.setLayoutX(((startX + (double)width / 2) + 10));
+        lbl.setLayoutX(((startX + (double)width / 2.7) + 10));
         lbl.setLayoutY((startY - 10));
         lbl.setTextFill(color);
         lbl.setFont(font);
@@ -724,9 +812,9 @@ public class Main extends Application {
     private void drawGameInformationContainer(Pane pane, int startX, int startY, int width, int height) {
         drawBorders(pane, startX, startY, width, height);
         Line dividingLine = new Line(
-                (startX + ((double)width / 2)),
+                (startX + ((double)width / 2.7)),
                 startY,
-                (startX + ((double)width / 2)),
+                (startX + ((double)width / 2.7)),
                 (startY + height)
         );
         pane.getChildren().add(dividingLine);
@@ -1094,11 +1182,11 @@ public class Main extends Application {
 
 
     /**
-     * Controls what happens when a user hits the "rotate falling Tetramino left counterclockwise" button
+     * Controls what happens when a user hits the "rotate falling Tetramino clockwise" button
      */
-    private void controlRotateCounterclockwiseButton() {
-        if (canFallingTetraminoRotateCounterClockwise()) {
-            rotateFallingTetraminoCounterClockwise();
+    private void controlRotateClockwiseButton() {
+        if (canFallingTetraminoRotateClockwise()) {
+            rotateFallingTetraminoClockwise();
         } else {
             eraseAndRemoveFallingTetramino();
         }
@@ -1108,11 +1196,11 @@ public class Main extends Application {
 
 
     /**
-     * Controls what happens when a user hits the "rotate falling Tetramino clockwise" button
+     * Controls what happens when a user hits the "rotate falling Tetramino left counterclockwise" button
      */
-    private void controlRotateClockwiseButton() {
-        if (canFallingTetraminoRotateClockwise()) {
-            rotateFallingTetraminoClockwise();
+    private void controlRotateCounterclockwiseButton() {
+        if (canFallingTetraminoRotateCounterclockwise()) {
+            rotateFallingTetraminoCounterclockwise();
         } else {
             eraseAndRemoveFallingTetramino();
         }
@@ -1154,16 +1242,7 @@ public class Main extends Application {
             pauseGame();
         } else {
             closePauseMenu();
-            // resumeGame();
         }
-    }
-
-
-    /**
-     * CURRENTLY EMPTY METHOD - Unpauses game and resumes play
-     */
-    private void resumeGame() {
-        // timer.play();
     }
 
 
@@ -1211,7 +1290,7 @@ public class Main extends Application {
         });
 
         btnResume.setOnKeyPressed(e -> {
-            if (e.getCode() == controlButtonPause || e.getCode() == KeyCode.ENTER) {
+            if (e.getCode() == controlKeyPause || e.getCode() == KeyCode.ENTER) {
                 closePauseMenu();
             }
         });
@@ -1221,7 +1300,7 @@ public class Main extends Application {
         });
 
         btnReset.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 resetGame();
             }
         });
@@ -1232,7 +1311,7 @@ public class Main extends Application {
         });
 
         btnOptions.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stagePause);
                 openOptionsMenu();
             }
@@ -1280,7 +1359,7 @@ public class Main extends Application {
         });
 
         btnBack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageOptions);
                 openPauseMenu();
             }
@@ -1297,14 +1376,14 @@ public class Main extends Application {
         });
 
         btnControls.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageOptions);
                 openControlOptionsMenu();
             }
         });
 
         btnColors.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageOptions);
                 openColorOptionsMenu();
             }
@@ -1318,15 +1397,6 @@ public class Main extends Application {
 
 
     /**
-     * Closes the options menu
-     */
-    private void closeOptionsMenu() {
-        stageOptions.close();
-        openPauseMenu();
-    }
-
-
-    /**
      * Opens the controls menu from the options menu
      */
     private void openControlOptionsMenu() {
@@ -1336,35 +1406,35 @@ public class Main extends Application {
 
         Label lblMoveLeft = new Label("Move Left");
         gridPaneControlOptions.setConstraints(lblMoveLeft, 0, 0);
-        btnMoveLeft = new Button(controlButtonMoveLeft.getName().toString());
+        btnMoveLeft = new Button(controlKeyMoveLeft.getName());
         gridPaneControlOptions.setConstraints(btnMoveLeft, 1, 0);
         Label lblMoveRight = new Label("Move Right");
         gridPaneControlOptions.setConstraints(lblMoveRight, 0, 1);
-        btnMoveRight = new Button(controlButtonMoveRight.getName().toString());
+        btnMoveRight = new Button(controlKeyMoveRight.getName());
         gridPaneControlOptions.setConstraints(btnMoveRight, 1, 1);
         Label lblSoftDrop = new Label("Soft Drop");
         gridPaneControlOptions.setConstraints(lblSoftDrop, 0, 2);
-        btnSoftDrop = new Button(controlButtonSoftDrop.getName().toString());
+        btnSoftDrop = new Button(controlKeySoftDrop.getName());
         gridPaneControlOptions.setConstraints(btnSoftDrop, 1, 2);
         Label lblHardDrop = new Label("Hard Drop");
         gridPaneControlOptions.setConstraints(lblHardDrop, 0, 3);
-        btnHardDrop = new Button(controlButtonHardDrop.getName().toString());
+        btnHardDrop = new Button(controlKeyHardDrop.getName());
         gridPaneControlOptions.setConstraints(btnHardDrop, 1, 3);
-        Label lblRotateCounterclockwise = new Label("Rotate Counterclockwise");
-        gridPaneControlOptions.setConstraints(lblRotateCounterclockwise, 0, 4);
-        btnRotateCounterclockwise = new Button(controlButtonRotateCounterclockwise.getName().toString());
-        gridPaneControlOptions.setConstraints(btnRotateCounterclockwise, 1, 4);
         Label lblRotateClockwise = new Label("Rotate Clockwise");
-        gridPaneControlOptions.setConstraints(lblRotateClockwise, 0, 5);
-        btnRotateClockwise = new Button(controlButtonRotateClockwise.getName().toString());
-        gridPaneControlOptions.setConstraints(btnRotateClockwise, 1, 5);
+        gridPaneControlOptions.setConstraints(lblRotateClockwise, 0, 4);
+        btnRotateClockwise = new Button(controlKeyRotateClockwise.getName());
+        gridPaneControlOptions.setConstraints(btnRotateClockwise, 1, 4);
+        Label lblRotateCounterclockwise = new Label("Rotate Counterclockwise");
+        gridPaneControlOptions.setConstraints(lblRotateCounterclockwise, 0, 5);
+        btnRotateCounterclockwise = new Button(controlKeyRotateCounterclockwise.getName());
+        gridPaneControlOptions.setConstraints(btnRotateCounterclockwise, 1, 5);
         Label lblHold = new Label("Hold");
         gridPaneControlOptions.setConstraints(lblHold, 0, 6);
-        btnHold = new Button(controlButtonHold.getName().toString());
+        btnHold = new Button(controlKeyHold.getName());
         gridPaneControlOptions.setConstraints(btnHold, 1, 6);
         Label lblPause = new Label("Pause");
         gridPaneControlOptions.setConstraints(lblPause, 0, 7);
-        btnPause = new Button(controlButtonPause.getName().toString());
+        btnPause = new Button(controlKeyPause.getName());
         gridPaneControlOptions.setConstraints(btnPause, 1, 7);
         Button btnBack = new Button("Back");
         gridPaneControlOptions.setConstraints(btnBack, 0, 8, 3, 1);
@@ -1378,8 +1448,8 @@ public class Main extends Application {
                 lblMoveRight, btnMoveRight,
                 lblSoftDrop, btnSoftDrop,
                 lblHardDrop, btnHardDrop,
-                lblRotateCounterclockwise, btnRotateCounterclockwise,
                 lblRotateClockwise, btnRotateClockwise,
+                lblRotateCounterclockwise, btnRotateCounterclockwise,
                 lblHold, btnHold,
                 lblPause, btnPause,
                 btnBack
@@ -1396,14 +1466,12 @@ public class Main extends Application {
         stageControlOptions.setOnCloseRequest(e -> {
             e.consume();
             closeStage(stageControlOptions);
-
-            // \/ - NEEDS CHANGED - NEED NEW METHOD TO GO FROM CONTROL OPTIONS TO OPTIONS
             openOptionsMenu();
         });
 
 
         btnBack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageControlOptions);
                 openOptionsMenu();
             }
@@ -1434,14 +1502,14 @@ public class Main extends Application {
             sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
         });
 
-        btnRotateCounterclockwise.setOnMouseClicked(e -> {
-            btnRotateCounterclockwise.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
-        });
-
         btnRotateClockwise.setOnMouseClicked(e -> {
             btnRotateClockwise.setText("---");
             sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateClockwise);
+        });
+
+        btnRotateCounterclockwise.setOnMouseClicked(e -> {
+            btnRotateCounterclockwise.setText("---");
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
         });
 
         btnHold.setOnMouseClicked(e -> {
@@ -1453,6 +1521,22 @@ public class Main extends Application {
             btnPause.setText("---");
             sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
         });
+    }
+
+
+    /**
+     * Returns the index in the KeyCode[] controlKeys of the specified KeyCode key
+     * @param key KeyCode parameter - The KeyCode you want to check if it is already assigned
+     * @return int value
+     * (-1 = KeyCode has not been assigned, anything else = index of control Key already assigned that KeyCode)
+     */
+    private int indexOfOccupiedControlKey(KeyCode key) {
+        for (int i = 0; i < controlKeys.length; i++) {
+            if (key == controlKeys[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 
@@ -1551,7 +1635,7 @@ public class Main extends Application {
         });
 
         btnBack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlButtonPause) {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageColorOptionsMenu);
                 openOptionsMenu();
             }
@@ -1683,28 +1767,36 @@ public class Main extends Application {
 
 
     /**
-     * NOT WORKING CORRECTLY
+     * Resets the current game to how a new game starts --
+     * Resets all game values and their displays to zero, erases all Rectangle blocks from every Pane,
+     * reinitialize all 2-dimensional int and Rectangle matrices, close pause menu and
+     * create and draw a new random current falling Tetramino
      */
     private void resetGame() {
+        // Reset all game values to zero, update their displays to reflect the reset,
+        // erase all the Rectangle blocks in every Pane and reinitialize all int matrices and Rectangle matrices
         resetScoreAndScoreLabel();
         resetLevelAndLevelLabel();
         resetClearedLinesAndClearedLinesLabel();
-        eraseBoard();
-        eraseAndRemoveFallingTetramino();
-
-//        currentRowBoard = startRowBoard;
-//        currentColBoard = startColBoard;
-//
         eraseAllBlocks(holdTetraminoType);
         resetIntBlockMatrixes();
         resetRectangleBlockMatrixes();
+
+        // Initialize a new first falling Tetramino
+        fallingTetraminoType = generateRandomTetraminoType();
+        Color color = getBlockColor(fallingTetraminoType);
+        tetraminoBlock = new Block(color);
+        tetraminoMatrix = tetraminoBlock.getBlockMatrix(fallingTetraminoType, orientation);
+        currentRowBoard = startRowBoard;
+        currentColBoard = startColBoard;
+        fallingTetraminoBlocksCoordinates = new ArrayList<>();
+        fallingTetraminoBlocksCoordinates = getFallingTetraminoBlocksCoordinatesAsArrayList(tetraminoMatrix);
+        tetraminoHeight = getFallingTetraminoHeight();
+        lowestOccupiedRow = boardMatrix.length - 1;
+
+        // Close the pause menu and draw the new current falling Tetramino to restart a new game
         closePauseMenu();
-//        drawAllBlocks(holdTetraminoType);
-//        drawBoard();
-//        drawFallingTetramino();
-//        playGame();
-//        init();
-//        playGame();
+        drawFallingTetramino();
     }
 
 
@@ -1762,7 +1854,7 @@ public class Main extends Application {
     private void resetIntBlockMatrixes() {
         boardMatrix = new int[numOfRowsBoard][numOfColsBoard];
 
-        tetraminoMatrix = new int[numOfRowsTetramino][numOfColsTetramino];
+        tetraminoMatrix = new int[4][4];
 
         holdTetraminoMatrix = new int[4][4];
         nextTetraminoMatrix = new int[4][4];
@@ -1859,7 +1951,7 @@ public class Main extends Application {
     private void incrementAndDisplayScore() {
         paneScoreDisplay.getChildren().remove(lblScoreValue);
         score += getValueToAddToScore();
-        lblScoreValue.setText(String.valueOf(score));
+        lblScoreValue.setText(formatNumberWithDelimiter.format(score));
         paneScoreDisplay.getChildren().add(lblScoreValue);
     }
 
@@ -1882,6 +1974,19 @@ public class Main extends Application {
      * Sets the game speed that corresponds to the current level
      */
     private void setGameSpeed() {
+        /*
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////// NEED TO MAKE SURE THESE VALUES ARE CORRECT! //////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+         */
         switch (level) {
             case 1:     speed = 720;    break;
             case 2:     speed = 640;    break;
@@ -1924,7 +2029,7 @@ public class Main extends Application {
             if (wasARowCompleted()) {
                 setLowestOccupiedRowAfterClearingARow();
                 eraseBoard();
-                instantiateAndPopulateNewBlocks2DRectangleMatrix();
+                instantiateAndPopulateNew2DRectangleMatrixBlocks();
                 drawBoard();
                 incrementAndDisplayScore();
             }
@@ -2236,6 +2341,7 @@ public class Main extends Application {
 
     /**
      * Controls what happens when a user loses the game (does not get to when level would switch to level 29)
+     * - TEMPORARY METHOD BODY - NEED TO DECIDE WHAT TO DO WHEN THE USER LOSES THE CURRENT GAME
      */
     private void lostGame() {
         timer.stop();
@@ -2436,7 +2542,7 @@ public class Main extends Application {
      * (space to rotate into, still be in bounds)
      * @return boolean value (true - can rotate counterclockwise, false - can not rotate counterclockwise)
      */
-    private boolean canFallingTetraminoRotateCounterClockwise() {
+    private boolean canFallingTetraminoRotateCounterclockwise() {
         if (fallingTetraminoType == 1) {
             return false;
         }
@@ -2464,7 +2570,7 @@ public class Main extends Application {
     /**
      * Rotate the current falling tetramino counterclockwise
      */
-    private void rotateFallingTetraminoCounterClockwise() {
+    private void rotateFallingTetraminoCounterclockwise() {
         orientation = changeOrientation(false);
 
         tetraminoMatrix = tetraminoBlock.getBlockMatrix(fallingTetraminoType, orientation);
@@ -2763,7 +2869,7 @@ public class Main extends Application {
      * Instantiates a new Rectangle[][] blocks and fills blocks with Rectangles
      * corresponding to any row and column index pair in int[][] boardMatrix that != 0
      */
-    private void instantiateAndPopulateNewBlocks2DRectangleMatrix() {
+    private void instantiateAndPopulateNew2DRectangleMatrixBlocks() {
         blocks = new Rectangle[boardMatrix.length][boardMatrix[0].length];
 
         for (int row = 0; row < boardMatrix.length; row++) {
@@ -2787,7 +2893,7 @@ public class Main extends Application {
      * Adds Rectangles to Pane paneGameBoard from int lowestOccupiedRow to the largest row and index pair
      */
     private void drawBoard() {
-        instantiateAndPopulateNewBlocks2DRectangleMatrix();
+        instantiateAndPopulateNew2DRectangleMatrixBlocks();
         for (int row = lowestOccupiedRow; row < blocks.length; row++) {
             for (int col = 0; col < blocks[row].length; col++) {
                 if (blocks[row][col] != null) {
