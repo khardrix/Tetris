@@ -60,7 +60,7 @@ public class Main extends Application {
     private Label lblLevelValue;
     private Label lblClearedLinesValue;
     private boolean isHoldTetraminoBoxEmpty;
-    private boolean hasSetControlButtonBeenClicked;
+    private boolean hasListenerBeenAdded;
     private int dimensions_holdTetraminoWidth;
     private int dimensions_holdTetraminoHeight;
     private int dimensions_boardWidth;
@@ -109,6 +109,7 @@ public class Main extends Application {
     private final int START_Y_UPCOMING_TETRAMINOS = (int)(BLOCK_SIZE * (24 / 3.0));     // 240
     private final int START_X_GAME_INFORMATION = (int)(BLOCK_SIZE * (86 / 3.0));        // 860
     private final int START_Y_GAME_INFORMATION = (int)(BLOCK_SIZE * (2 / 3.0));         // 20
+    private Button[] buttons;
     private int[][] boardMatrix;
     private int[][] holdTetraminoMatrix;
     private int[][] tetraminoMatrix;
@@ -130,6 +131,7 @@ public class Main extends Application {
     private Color colorBorder;
     private Stage stagePause;
     private Stage stageOptions;
+    private Stage stageControlOptions;
     private KeyCode controlKeyMoveLeft;
     private KeyCode controlKeyMoveRight;
     private KeyCode controlKeySoftDrop;
@@ -155,6 +157,7 @@ public class Main extends Application {
         primaryStage.setMinWidth(BLOCK_SIZE * (130 / 3.0));         // 1300
         primaryStage.setMaxWidth(BLOCK_SIZE * (130 / 3.0));         // 1300
         primaryStage.show();
+        scene.getStylesheets().add("/styling/primary-stage.css");
 
         drawBoard();
 
@@ -162,10 +165,6 @@ public class Main extends Application {
         drawFallingTetramino();
 
         runGameAtSpecifiedSpeed(speed);
-
-        // Set the CycleCount of the Animation to INDEFINITE (animation doesn't end) and Play the animation
-        timer.setCycleCount(Timeline.INDEFINITE);
-        timer.play();
 
         //////////////////////////////////////////// CONTROLS ////////////////////////////////////////////////////
         scene.setOnKeyPressed(e -> {
@@ -202,14 +201,16 @@ public class Main extends Application {
         /////////////////////////////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////
         ERRORS:
-        1. CAN CLICK MULTIPLE BUTTONS AT A TIME
-        2. CAN CLICK A BUTTON AND THEN NOT SET THE KEY
-        3. CAN CLICK A BUTTON AND THEN BACK OUT OF THE CONTROL OPTIONS MENU
+        1. CAN CLICK MULTIPLE BUTTONS AT A TIME ------- SOLVED!!!!!!!
+        2. CAN CLICK A BUTTON AND THEN NOT SET THE KEY ------- SOLVED!!!!!!!
+        3. CAN CLICK A BUTTON AND THEN BACK OUT OF THE CONTROL OPTIONS MENU ------- SOLVED!!!!!!!
         4. CAN SET MULTIPLE CONTROLS TO THE SAME KEY ------- SOLVED!!!!!!!
+        5. SPACE IS NOT WORKING AFTER SETTING PAUSE TO SOMETHING ELSE. CAN NO LONGER SET IT BACK TO SPACE
+                AND THEN SPACE STOPS WORKING FOR CLICKING A BUTTON
 
         NEED TO IMPLEMENT:
         1. IF USER DECIDES THEY DON'T WANT TO CHANGE THE KEY BINDING FOR AN ACTION, ALLOW THEM TO
-                CLICK THE BUTTON AGAIN TO CANCEL THE EventListener
+                CLICK THE BUTTON AGAIN TO CANCEL THE EventListener ------- SOLVED!!!!!!!
                 Idea for implementation: Use a boolean value as a flag of whether the user has
                                             clicked a Button yet. When the user clicks the Button:
                                             boolean (hasBeenClicked) value:
@@ -226,136 +227,72 @@ public class Main extends Application {
         keyHandlerBtnMoveLeft = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyMoveLeft(key);
-                    controlKeys[0] = key;
-                    btnMoveLeft.setText(key.getName());
-                } else {
-                    btnMoveLeft.setText(controlKeyMoveLeft.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveLeft);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnMoveLeft, event, 0, btnMoveLeft
+                );
             }
         };
 
         keyHandlerBtnMoveRight = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyMoveRight(key);
-                    controlKeys[1] = key;
-                    btnMoveRight.setText(key.getName());
-                } else {
-                    btnMoveRight.setText(controlKeyMoveRight.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveRight);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnMoveRight, event, 1, btnMoveRight
+                );
             }
         };
 
         keyHandlerBtnSoftDrop = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeySoftDrop(key);
-                    controlKeys[2] = key;
-                    btnSoftDrop.setText(key.getName());
-                } else {
-                    btnSoftDrop.setText(controlKeySoftDrop.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnSoftDrop);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnSoftDrop, event, 2, btnSoftDrop
+                );
             }
         };
 
         keyHandlerBtnHardDrop = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyHardDrop(key);
-                    controlKeys[3] = key;
-                    btnHardDrop.setText(key.getName());
-                } else {
-                    btnHardDrop.setText(controlKeyHardDrop.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnHardDrop, event, 3, btnHardDrop
+                );
             }
         };
 
         keyHandlerBtnRotateClockwise = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyRotateClockwise(key);
-                    controlKeys[4] = key;
-                    btnRotateClockwise.setText(key.getName());
-                } else {
-                    btnRotateClockwise.setText(controlKeyRotateClockwise.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateClockwise);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnRotateClockwise, event, 4, btnRotateClockwise
+                );
             }
         };
 
         keyHandlerBtnRotateCounterclockwise = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyRotateCounterclockwise(key);
-                    controlKeys[5] = key;
-                    btnRotateCounterclockwise.setText(key.getName());
-                } else {
-                    btnRotateCounterclockwise.setText(controlKeyRotateCounterclockwise.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnRotateCounterclockwise, event, 5, btnRotateCounterclockwise
+                );
             }
         };
 
         keyHandlerBtnHold = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyHold(key);
-                    controlKeys[6] = key;
-                    btnHold.setText(key.getName());
-                } else {
-                    btnHold.setText(controlKeyHold.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHold);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnHold, event, 6, btnHold
+                );
             }
         };
 
         keyHandlerBtnPause = new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                KeyCode key = event.getCode();
-                int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
-
-                if (indexOfOccupiedKey == -1) {
-                    setControlKeyPause(key);
-                    controlKeys[7] = key;
-                    btnPause.setText(key.getName());
-                } else {
-                    btnPause.setText(controlKeyPause.getName());
-                }
-                sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
+                handleKeyEventForControlOptionsMenu(
+                        keyHandlerBtnPause, event, 7, btnPause
+                );
             }
         };
 
@@ -399,8 +336,11 @@ public class Main extends Application {
         numOfRowsBoard = 20;
         numOfColsBoard = 10;
 
+        // Initialize boolean type class variables
         isHoldTetraminoBoxEmpty = true;
-        hasSetControlButtonBeenClicked = false;
+        hasListenerBeenAdded = false;
+
+        // Initialize Tetramino types
         holdTetraminoType = 0;
         nextTetraminoType = 0;
         upcomingTetraminoTypeTop = 0;
@@ -564,6 +504,53 @@ public class Main extends Application {
 
         // Initialize the Color of the block borders
         colorBorder = Color.BLACK;
+    }
+
+
+    /**
+     * Event handler for the EventHandler (KeyEvent)'s that assigns the KeyCode key pressed to the
+     * corresponding KeyCode control key if the user didn't try to use a KeyCode that is already
+     * assigned to another KeyCode control key. If the user does try to assign a KeyCode key
+     * to a KeyCode control key that is already assigned that KeyCode key, the KeyCode control key
+     * is assigned its previous KeyCode key.
+     * If successful, that KeyCode key is assigned its corresponding index in the KeyCode[] controlKeys and
+     * that KeyCode is assigned to the proper KeyCode control key.
+     * Whether it is successful or not, the resulting KeyCode key name is assigned as the text in the
+     * corresponding Button.
+     * @param keyHandler EventHandler (KeyEvent) parameter - The handler this method is executing for
+     * @param event KeyEvent parameter - The KeyCode key that was pressed
+     * @param btnIndex int parameter - The index of the Button in the Button[] buttons
+     * @param btn Button parameter - The Button that was clicked to activate the EventHandler
+     */
+    private void handleKeyEventForControlOptionsMenu(
+            EventHandler<KeyEvent> keyHandler, KeyEvent event, int btnIndex, Button btn)
+    {
+        KeyCode key = event.getCode();
+        int indexOfOccupiedKey = indexOfOccupiedControlKey(key);
+
+        if (indexOfOccupiedKey == -1) {
+            switch (btnIndex) {
+                case 0:     setControlKeyMoveLeft(key);                     break;
+                case 1:     setControlKeyMoveRight(key);                    break;
+                case 2:     setControlKeySoftDrop(key);                     break;
+                case 3:     setControlKeyHardDrop(key);                     break;
+                case 4:     setControlKeyRotateClockwise(key);              break;
+                case 5:     setControlKeyRotateCounterclockwise(key);       break;
+                case 6:     setControlKeyHold(key);                         break;
+                case 7:     setControlKeyPause(key);                        break;
+                default:    break;
+            }
+            controlKeys[btnIndex] = key;
+            btn.setText(key.getName());
+        } else {
+            btn.setText(controlKeys[btnIndex].getName());
+        }
+        enableAllButtonsAndWindowControlsInControlOptionsMenu(buttons);
+        // Without setting hasListenerBeenAdded to false, after setting the KeyCode value
+        // the user would have to click on the Button twice to activate the EventListener again
+        hasListenerBeenAdded = false;
+
+        sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, keyHandler);
     }
 
 
@@ -1278,7 +1265,7 @@ public class Main extends Application {
         stagePause.setScene(scenePauseMenu);
         stagePause.show();
 
-        scenePauseMenu.getStylesheets().add("styling/pauseMenu.css");
+        scenePauseMenu.getStylesheets().add("styling/pause-menu.css");
 
         stagePause.setOnCloseRequest(e -> {
             e.consume();
@@ -1328,7 +1315,7 @@ public class Main extends Application {
      */
     private void closePauseMenu() {
         closeStage(stagePause);
-        timer.play();
+        runGameAtSpecifiedSpeed(speed);
     }
 
 
@@ -1350,7 +1337,7 @@ public class Main extends Application {
         stageOptions.setTitle("Options Menu");
         stageOptions.setScene(sceneOptions);
         stageOptions.show();
-        sceneOptions.getStylesheets().add("/styling/OptionMenu.css");
+        sceneOptions.getStylesheets().add("/styling/options-menu.css");
 
         stageOptions.setOnCloseRequest(e -> {
             e.consume();
@@ -1400,7 +1387,7 @@ public class Main extends Application {
      * Opens the controls menu from the options menu
      */
     private void openControlOptionsMenu() {
-        Stage stageControlOptions = new Stage();
+        stageControlOptions = new Stage();
 
         GridPane gridPaneControlOptions = new GridPane();
 
@@ -1440,9 +1427,6 @@ public class Main extends Application {
         gridPaneControlOptions.setConstraints(btnBack, 0, 8, 3, 1);
         btnBack.setId("btnBack");
 
-
-
-
         gridPaneControlOptions.getChildren().addAll(
                 lblMoveLeft, btnMoveLeft,
                 lblMoveRight, btnMoveRight,
@@ -1461,7 +1445,13 @@ public class Main extends Application {
         stageControlOptions.setTitle("Control Options");
         stageControlOptions.setScene(sceneControlOptions);
         stageControlOptions.show();
-        sceneControlOptions.getStylesheets().add("/styling/ControlOptionsMenu.css");
+        sceneControlOptions.getStylesheets().add("/styling/control-options-menu.css");
+
+        Button[] controlOptionsMenuButtons = new Button[] {
+                btnMoveLeft, btnMoveRight, btnSoftDrop, btnHardDrop,
+                btnRotateClockwise, btnRotateCounterclockwise, btnHold, btnPause, btnBack
+        };
+        setButtonArrayButtons(controlOptionsMenuButtons);
 
         stageControlOptions.setOnCloseRequest(e -> {
             e.consume();
@@ -1469,6 +1459,10 @@ public class Main extends Application {
             openOptionsMenu();
         });
 
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageControlOptions);
+            openOptionsMenu();
+        });
 
         btnBack.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
@@ -1477,49 +1471,215 @@ public class Main extends Application {
             }
         });
 
-        btnBack.setOnMouseClicked(e -> {
-            closeStage(stageControlOptions);
-            openOptionsMenu();
+        btnMoveLeft.setOnMouseClicked(e -> {
+            handleControlOptionsMenuButtonClick(
+                    btnMoveLeft, controlOptionsMenuButtons, 0,
+                    keyHandlerBtnMoveLeft, controlKeyMoveLeft
+            );
         });
 
-        btnMoveLeft.setOnMouseClicked(e -> {
-            btnMoveLeft.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveLeft);
+        btnMoveLeft.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnMoveLeft, controlOptionsMenuButtons, 0,
+                        keyHandlerBtnMoveLeft, controlKeyMoveLeft
+                );
+            }
         });
 
         btnMoveRight.setOnMouseClicked(e -> {
-            btnMoveRight.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnMoveRight);
+            handleControlOptionsMenuButtonClick(
+                    btnMoveRight, controlOptionsMenuButtons, 1,
+                    keyHandlerBtnMoveRight, controlKeyMoveRight
+            );
+        });
+
+        btnMoveRight.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnMoveRight, controlOptionsMenuButtons, 1,
+                        keyHandlerBtnMoveRight, controlKeyMoveRight
+                );
+            }
         });
 
         btnSoftDrop.setOnMouseClicked(e -> {
-            btnSoftDrop.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnSoftDrop);
+            handleControlOptionsMenuButtonClick(
+                    btnSoftDrop, controlOptionsMenuButtons, 2,
+                    keyHandlerBtnSoftDrop, controlKeySoftDrop
+            );
+        });
+
+        btnSoftDrop.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnSoftDrop, controlOptionsMenuButtons, 2,
+                        keyHandlerBtnSoftDrop, controlKeySoftDrop
+                );
+            }
         });
 
         btnHardDrop.setOnMouseClicked(e -> {
-            btnHardDrop.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHardDrop);
+            handleControlOptionsMenuButtonClick(
+                    btnHardDrop, controlOptionsMenuButtons, 3,
+                    keyHandlerBtnHardDrop, controlKeyHardDrop
+            );
+        });
+
+        btnHardDrop.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnHardDrop, controlOptionsMenuButtons, 3,
+                        keyHandlerBtnHardDrop, controlKeyHardDrop
+                );
+            }
         });
 
         btnRotateClockwise.setOnMouseClicked(e -> {
-            btnRotateClockwise.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateClockwise);
+            handleControlOptionsMenuButtonClick(
+                    btnRotateClockwise, controlOptionsMenuButtons, 4,
+                    keyHandlerBtnRotateClockwise, controlKeyRotateClockwise
+            );
+        });
+
+        btnRotateClockwise.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnRotateClockwise, controlOptionsMenuButtons, 4,
+                        keyHandlerBtnRotateClockwise, controlKeyRotateClockwise
+                );
+            }
         });
 
         btnRotateCounterclockwise.setOnMouseClicked(e -> {
-            btnRotateCounterclockwise.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnRotateCounterclockwise);
+            handleControlOptionsMenuButtonClick(
+                    btnRotateCounterclockwise, controlOptionsMenuButtons, 5,
+                    keyHandlerBtnRotateCounterclockwise, controlKeyRotateCounterclockwise
+            );
+        });
+
+        btnRotateCounterclockwise.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnRotateCounterclockwise, controlOptionsMenuButtons, 5,
+                        keyHandlerBtnRotateCounterclockwise, controlKeyRotateCounterclockwise
+                );
+            }
         });
 
         btnHold.setOnMouseClicked(e -> {
-            btnHold.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnHold);
+            handleControlOptionsMenuButtonClick(
+                    btnHold, controlOptionsMenuButtons, 6,
+                    keyHandlerBtnHold, controlKeyHold
+            );
+        });
+
+        btnHold.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnHold, controlOptionsMenuButtons, 6,
+                        keyHandlerBtnHold, controlKeyHold
+                );
+            }
         });
 
         btnPause.setOnMouseClicked(e -> {
-            btnPause.setText("---");
-            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, keyHandlerBtnPause);
+            handleControlOptionsMenuButtonClick(
+                    btnPause, controlOptionsMenuButtons, 7,
+                    keyHandlerBtnPause, controlKeyPause
+            );
+        });
+
+        btnPause.setOnKeyPressed(e -> {
+            if (e.getCode() == controlKeyPause) {
+                handleControlOptionsMenuButtonClick(
+                        btnPause, controlOptionsMenuButtons, 7,
+                        keyHandlerBtnPause, controlKeyPause
+                );
+            }
+        });
+    }
+
+
+    /**
+     * Helps handle Button clicks in the control options menu -
+     * disables other Buttons once a Button is clicked, allows a Button to be clicked again to cancel
+     * setting a KeyCode key to that control KeyCode, enables Buttons again after a KeyCode is pressed or
+     * the user clicks the Button of the control key they were attempting to set, again.
+     * @param btn Button parameter - The Button that was clicked
+     * @param btns Button[] parameter - The Button[] that contains the Buttons from the control options menu
+     * @param btnIndex int index - The index of the Button btn parameter inside the Button[] btns parameter
+     * @param eventHandler EventHandler (KeyEvent) parameter - corresponds to the Event Handler for Button btn parameter
+     * @param key KeyCode parameter - The KeyCode of the KeyCode that presently corresponds to the KeyCode being changed
+     */
+    private void handleControlOptionsMenuButtonClick(
+            Button btn, Button[] btns, int btnIndex, EventHandler<KeyEvent> eventHandler, KeyCode key
+    ) {
+        if (!hasListenerBeenAdded) {
+            // So the user can click the Button again to cancel the EventListener
+            // Without setting hasListenerBeenAdded to true, clicking on the Button, after clicking
+            // the Button to add the EventListener, does nothing
+            hasListenerBeenAdded = true;
+            btn.setText("---");
+            disableAllControlOptionsMenuButtonsOtherThanSpecifiedButton(btns, btnIndex);
+            sceneControlOptions.addEventHandler(KeyEvent.KEY_PRESSED, eventHandler);
+        } else {
+            // So the user can click the Button again to cancel the EventListener
+            // Without setting hasListenerBeenAdded to false, if the user tries to click on the Button
+            // after setting its KeyCode value, the Button will not do anything
+            hasListenerBeenAdded = false;
+
+            btn.setText(key.getName());
+            enableAllButtonsAndWindowControlsInControlOptionsMenu(btns);
+            sceneControlOptions.removeEventHandler(KeyEvent.KEY_PRESSED, eventHandler);
+        }
+    }
+
+
+    /**
+     * Sets the class variable Button[] buttons to the passed in Button[] buttons
+     * @param buttons Button[] parameter - The Button[] array to set the class variable Button[] buttons equal to
+     */
+    private void setButtonArrayButtons(Button[] buttons) {
+        this.buttons = buttons;
+    }
+
+
+    /**
+     * Disable all the Buttons in the control options menu other than the Button at the specified index
+     * in the passed in Button[] array
+     * @param buttons Button[] parameter - Button array that stores all the Buttons in the control options menu
+     * @param btnIndex int parameter - The index in the buttons parameter where the specified Button is
+     */
+    private void disableAllControlOptionsMenuButtonsOtherThanSpecifiedButton(Button[] buttons, int btnIndex) {
+        // Disable all Buttons in the Stage other than the one at the specified index in the Button[] array
+        for (int i = 0; i < buttons.length; i++) {
+            if (i != btnIndex) {
+                buttons[i].setDisable(true);
+            }
+        }
+
+        // Make when a user clicks the "X" window control button (close button) on the Stage do nothing
+        stageControlOptions.setOnCloseRequest(e -> {
+            e.consume();
+        });
+    }
+
+
+    /**
+     * Enables all the Buttons and window controls (min, max, close) in the control options menu Stage
+     * @param buttons Button[] parameter - The Button[] array that stores all the Buttons in
+     *                the control options menu Stage
+     */
+    private void enableAllButtonsAndWindowControlsInControlOptionsMenu(Button[] buttons) {
+        for (int i = 0; i < buttons.length; i++) {
+            buttons[i].setDisable(false);
+        }
+
+        stageControlOptions.setOnCloseRequest(e -> {
+            e.consume();
+            closeStage(stageControlOptions);
+            openOptionsMenu();
         });
     }
 
@@ -1623,7 +1783,7 @@ public class Main extends Application {
         );
 
         Scene sceneColorOptionsMenu = new Scene(gridPaneColorOptionsMenu, (BLOCK_SIZE * 16), (BLOCK_SIZE * 16));
-        sceneColorOptionsMenu.getStylesheets().add("/styling/ColorOptionsMenu.css");
+        sceneColorOptionsMenu.getStylesheets().add("/styling/color-options-menu.css");
         stageColorOptionsMenu.setScene(sceneColorOptionsMenu);
         stageColorOptionsMenu.setTitle("Color Options");
         stageColorOptionsMenu.show();
@@ -1648,71 +1808,43 @@ public class Main extends Application {
 
         colorPickerOBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerOBlock.getValue();
-                setColorOBlock(c);
-
-                eraseAllBlocks(1);
-                drawAllBlocks(1);
+                handleColorPicker(colorPickerOBlock, 1);
             }
         });
 
         colorPickerIBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerIBlock.getValue();
-                setColorIBlock(c);
-
-                eraseAllBlocks(2);
-                drawAllBlocks(2);
+                handleColorPicker(colorPickerIBlock, 2);
             }
         });
 
         colorPickerSBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerSBlock.getValue();
-                setColorSBlock(c);
-
-                eraseAllBlocks(3);
-                drawAllBlocks(3);
+                handleColorPicker(colorPickerSBlock, 3);
             }
         });
 
         colorPickerZBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerZBlock.getValue();
-                setColorZBlock(c);
-
-                eraseAllBlocks(4);
-                drawAllBlocks(4);
+                handleColorPicker(colorPickerZBlock, 4);
             }
         });
 
         colorPickerLBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerLBlock.getValue();
-                setColorLBlock(c);
-
-                eraseAllBlocks(5);
-                drawAllBlocks(5);
+                handleColorPicker(colorPickerLBlock, 5);
             }
         });
 
         colorPickerJBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerJBlock.getValue();
-                setColorJBlock(c);
-
-                eraseAllBlocks(6);
-                drawAllBlocks(6);
+                handleColorPicker(colorPickerJBlock, 6);
             }
         });
 
         colorPickerTBlock.setOnAction(new EventHandler() {
             public void handle(Event t) {
-                Color c = colorPickerTBlock.getValue();
-                setColorTBlock(c);
-
-                eraseAllBlocks(7);
-                drawAllBlocks(7);
+                handleColorPicker(colorPickerTBlock, 7);
             }
         });
 
@@ -1767,13 +1899,63 @@ public class Main extends Application {
 
 
     /**
+     * Event handler for ColorPickers in the color options menu. It gets the Color value from
+     * the ColorPicker, sets the Color of the corresponding Tetramino type blocks depending on
+     * the int blockType passed in. It then erases all the blocks from all Panes and then redraws them
+     * with the new Color
+     * @param colorPicker ColorPicker parameter - The ColorPicker this method is handling the event of
+     * @param blockType int parameter - Int value that corresponds to the Tetramino block type
+     */
+    private void handleColorPicker(ColorPicker colorPicker, int blockType) {
+        Color c = colorPicker.getValue();
+
+        switch (blockType) {
+            case 1:     setColorOBlock(c);      break;
+            case 2:     setColorIBlock(c);      break;
+            case 3:     setColorSBlock(c);      break;
+            case 4:     setColorZBlock(c);      break;
+            case 5:     setColorLBlock(c);      break;
+            case 6:     setColorJBlock(c);      break;
+            case 7:     setColorTBlock(c);      break;
+        }
+
+        eraseAllBlocks(blockType);
+        drawAllBlocks(blockType);
+    }
+
+
+    /**
+     * NEEDS TO BE IMPLEMENTED - SOME IDEAS FOR WHAT CUSTOMIZATIONS TO ADD ARE IN COMMENTS IN METHOD BODY
+     */
+    private void openCustomizeMenu() {
+        // 1. Add whatever music you want for game music
+        // 2. Allow user to make up to two custom Tetraminos
+        // 3. Allow user to choose what Font they want for the game information display
+        // 4. Change the number of rows and columns in the board matrix -
+        //          (game board initially is 20 rows and 10 columns)
+        // 5. Allow user to choose custom game modes:
+        //      A) Number of Tetraminos that have entered the game determines score
+        //      B) Disable soft drop and hard drop and the goal is to last as long as possible (or
+        //              have it to where the time it would take for the Tetramino to drop normally
+        //              would have to be calculated and added to the timer,
+        //              that way soft drop and hard drop wouldn't have to be disabled)
+        //      C) Race Mode: Given a time limit, try to use as many blocks as possible or
+        //              score as many points as possible or clear as many lines as possible
+        //      *D) Could try to create an AI to play against the computer
+        //      *: THIS WOULD BE A STRETCH AND WOULD REQUIRE FINDING OUT HOW TO MAKE AN AI
+        //          TO PLAY THE GAME AND WOULD HAVE TO REDESIGN THE ENTIRE UI TO FIT TWO GAME BOARDS
+    }
+
+
+    /**
      * Resets the current game to how a new game starts --
      * Resets all game values and their displays to zero, erases all Rectangle blocks from every Pane,
-     * reinitialize all 2-dimensional int and Rectangle matrices, close pause menu and
-     * create and draw a new random current falling Tetramino
+     * reinitialize all 2-dimensional int and Rectangle matrices, close pause menu,
+     * create and draw a new random current falling Tetramino, reset game speed to initial value and
+     * start the game running again at initial speed of 800ms between each time a Tetramino moves down one row
      */
     private void resetGame() {
-        // Reset all game values to zero, update their displays to reflect the reset,
+        // Reset all game values to zero, update their Label displays to reflect the reset,
         // erase all the Rectangle blocks in every Pane and reinitialize all int matrices and Rectangle matrices
         resetScoreAndScoreLabel();
         resetLevelAndLevelLabel();
@@ -1781,6 +1963,9 @@ public class Main extends Application {
         eraseAllBlocks(holdTetraminoType);
         resetIntBlockMatrixes();
         resetRectangleBlockMatrixes();
+
+        // Reset speed to initial value of 800ms between each time a Tetramino moves down one row
+        speed = 800;
 
         // Initialize a new first falling Tetramino
         fallingTetraminoType = generateRandomTetraminoType();
@@ -1794,7 +1979,7 @@ public class Main extends Application {
         tetraminoHeight = getFallingTetraminoHeight();
         lowestOccupiedRow = boardMatrix.length - 1;
 
-        // Close the pause menu and draw the new current falling Tetramino to restart a new game
+        // Close the pause menu and draw the new current falling Tetramino to restart a new game at initial speed
         closePauseMenu();
         drawFallingTetramino();
     }
@@ -1957,7 +2142,8 @@ public class Main extends Application {
 
 
     /**
-     * NEED TO REFACTOR (speed VALUE SHOULD BE DECREMENTED BY 80 UNTIL speed = 80) -
+     * NEED TO REFACTOR -
+     * (speed VALUES NEED TO COMPARED AGAINST NES NTSC Tetris AT EACH LEVEL TO GET CORRECT SPEEDS) -
      * Increments level and speeds up game play
      */
     private void incrementLevel() {
@@ -2011,12 +2197,14 @@ public class Main extends Application {
      * @return boolean value (true - call incrementLevel(), false - not time to call incrementLevel())
      */
     private boolean shouldLevelBeIncremented() {
-        return (numberOfRowsCleared % 10 == 0);
+        return (numberOfRowsCleared % 1 == 0);
     }
 
 
     /**
-     * Runs the game
+     * Runs the game for one moving Tetramino down one row or summoning a new current falling Tetramino and
+     * calling lostGame() if a new current falling Tetramino cannot be placed onto the game board (boardMatrix)
+     * at the starting row and column without being placed on top of an already in place Tetramino
      */
     private void playGame() {
         if (canFallingTetraminoMoveDownOneRow()) {
