@@ -1,0 +1,21 @@
+package styling;
+
+.picker-color {
+    -fx-pref-width: 200px;
+    -fx-vgap: 5px;
+}
+
+.color-picker {
+    -fx-pref-width: 300px;
+    -fx-color-rect-width: 200px;
+}
+
+.color-picker.button > .arrow-button {
+    visibility: hidden;
+}
+
+.color-picker > arrow-button {
+    visibility: hidden;
+}
+
+

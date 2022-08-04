@@ -1,3 +1,8 @@
+import objects.Block;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -17,6 +22,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -47,6 +53,8 @@ public class Main extends Application {
     private NumberFormat formatNumberWithDelimiter;
     private Timeline timer;
     private Random random;
+    private Font fontMonoton;
+    private Font fontPressStart2P;
     private Pane paneGameBoard;
     private Pane paneScoreDisplay;
     private Pane paneLevelDisplay;
@@ -55,7 +63,7 @@ public class Main extends Application {
     private Pane paneHoldTetramino;
     private Pane paneUpcomingTetraminos;
     // private GridPane gridPaneMain;
-    private Scene scene;
+    private Scene scenePrimary;
     private Label lblScoreValue;
     private Label lblLevelValue;
     private Label lblClearedLinesValue;
@@ -110,6 +118,7 @@ public class Main extends Application {
     private final int START_X_GAME_INFORMATION = (int)(BLOCK_SIZE * (86 / 3.0));        // 860
     private final int START_Y_GAME_INFORMATION = (int)(BLOCK_SIZE * (2 / 3.0));         // 20
     private Button[] buttons;
+    private Font[] fonts;
     private int[][] boardMatrix;
     private int[][] holdTetraminoMatrix;
     private int[][] tetraminoMatrix;
@@ -149,15 +158,24 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        /*
+        // load the tron font.
+        Font.loadFont(
+                Main.class.getResource("/resources/Monoton-Regular.ttf").toExternalForm(),
+                32
+        );
+         */
+
+
         // Set the Title of the Stage, Set the Scene to the Stage and Show the Stage
         primaryStage.setTitle("Tetris - Version by Ryan Huffman");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(scenePrimary);
         primaryStage.setMinHeight(BLOCK_SIZE * (68 / 3.0));         // 680
         primaryStage.setMaxHeight(BLOCK_SIZE * (68 / 3.0));         // 680
         primaryStage.setMinWidth(BLOCK_SIZE * (130 / 3.0));         // 1300
         primaryStage.setMaxWidth(BLOCK_SIZE * (130 / 3.0));         // 1300
         primaryStage.show();
-        scene.getStylesheets().add("/styling/primary-stage.css");
+        scenePrimary.getStylesheets().add("/resources/styling/primary-stage.css");
 
         drawBoard();
 
@@ -167,7 +185,7 @@ public class Main extends Application {
         runGameAtSpecifiedSpeed(speed);
 
         //////////////////////////////////////////// CONTROLS ////////////////////////////////////////////////////
-        scene.setOnKeyPressed(e -> {
+        scenePrimary.setOnKeyPressed(e -> {
             if (e.getCode() == controlKeyMoveLeft){
                 controlMoveLeftButton();
             }
@@ -309,6 +327,23 @@ public class Main extends Application {
         // Initialize Random variable
         random = new Random();
 
+        //////////////////////////////////////// LOAD FONTS //////////////////////////////////////////////
+        // Load the Monoton font
+        fontMonoton = Font.loadFont(
+                Main.class.getResource("/resources/fonts/Monoton-Regular.ttf").toExternalForm(),
+                32
+        );
+        // Load the Press Start 2P font
+        fontPressStart2P = Font.loadFont(
+                Main.class.getResource("/resources/fonts/PressStart2P-Regular.ttf").toExternalForm(),
+                22
+        );
+
+        // Add all Fonts to the Font[] array fonts
+        fonts = new Font[] {
+                fontMonoton, fontPressStart2P
+        };
+
         // Initialize NumberFormat object
         formatNumberWithDelimiter = NumberFormat.getInstance();
         formatNumberWithDelimiter.setGroupingUsed(true);
@@ -433,7 +468,7 @@ public class Main extends Application {
                 paneUpcomingTetraminos, paneScoreDisplay, paneLevelDisplay, paneClearedLinesDisplay);
 
         // Initialize the Scene
-        scene = new Scene(gridPaneMain, (BLOCK_SIZE * (80 / 3.0)), (BLOCK_SIZE * (68 / 3.0)));  // 800X680
+        scenePrimary = new Scene(gridPaneMain, (BLOCK_SIZE * (80 / 3.0)), (BLOCK_SIZE * (68 / 3.0)));  // 800X680
 
         // Initialize the default beginning speed
         // Attempting to match NES Tetris speed (800 = speed of level 00, 720 = level 01, 640 = level 02)
@@ -754,8 +789,11 @@ public class Main extends Application {
         lbl.setLayoutX(((startX + (double)width / 2.7) + 10));
         lbl.setLayoutY((startY - 10));
         lbl.setTextFill(color);
-        lbl.setFont(font);
+        // lbl.setFont(font);
+        lbl.setFont(fontMonoton);
         lbl.setText(labelValue);
+
+        lbl.getStyleClass().add("value-label");
 
         pane.getChildren().add(lbl);
     }
@@ -777,12 +815,26 @@ public class Main extends Application {
     ) {
         Label lbl = new Label(labelText);
         Font font = new Font(fontSize);
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        // lbl.setStyle("-fx-font-family: Press Start 2P;");
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         lbl.setLabelFor(labelFor);
         lbl.setLayoutX((startX + 10));
         lbl.setLayoutY((startY - 10));
         lbl.setTextFill(color);
-        lbl.setFont(font);
+        // lbl.setFont(font);
+        lbl.setFont(fontPressStart2P);
+
+        lbl.getStyleClass().add("title-label");
 
         pane.getChildren().add(lbl);
     }
@@ -821,8 +873,38 @@ public class Main extends Application {
     private void drawTitleLabel(
             Pane pane, Color color, int fontSize, String labelText, int startX, int startY, int width
     ) {
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////// TEST CODE BELOW //////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        Text txtOfLabel = new Text();
+        txtOfLabel.setText(labelText);
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////// TEST CODE ABOVE //////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
         Font font = new Font(fontSize);
         Label lbl = new Label(labelText);
+        // fontMonoton = new Font(26);
 
         lbl.setLabelFor(pane);
         lbl.setLayoutX(
@@ -1265,7 +1347,7 @@ public class Main extends Application {
         stagePause.setScene(scenePauseMenu);
         stagePause.show();
 
-        scenePauseMenu.getStylesheets().add("styling/pause-menu.css");
+        scenePauseMenu.getStylesheets().add("resources/styling/pause-menu.css");
 
         stagePause.setOnCloseRequest(e -> {
             e.consume();
@@ -1307,6 +1389,12 @@ public class Main extends Application {
         btnExit.setOnMouseClicked(e -> {
             closeProgram(stagePause, true);
         });
+
+        btnExit.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                closeProgram(stagePause, true);
+            }
+        });
     }
 
 
@@ -1327,32 +1415,21 @@ public class Main extends Application {
 
         Button btnControls = new Button("CONTROLS");
         Button btnColors = new Button("COLORS");
+        Button btnFonts = new Button("FONTS");
         Button btnBack = new Button("BACK");
         /* MORE BUTTONS TO BE ADDED LATER WHEN MORE OPTIONS ARE ADDED */
 
-        vBoxOptions.getChildren().addAll(btnControls, btnColors, btnBack);
+        vBoxOptions.getChildren().addAll(btnControls, btnColors, btnFonts, btnBack);
 
         Scene sceneOptions = new Scene(vBoxOptions, (BLOCK_SIZE * 8), (BLOCK_SIZE * 9));
         stageOptions = new Stage();
         stageOptions.setTitle("Options Menu");
         stageOptions.setScene(sceneOptions);
         stageOptions.show();
-        sceneOptions.getStylesheets().add("/styling/options-menu.css");
+        sceneOptions.getStylesheets().add("/resources/styling/options-menu.css");
 
         stageOptions.setOnCloseRequest(e -> {
             e.consume();
-            closeStage(stageOptions);
-            openPauseMenu();
-        });
-
-        btnBack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
-                closeStage(stageOptions);
-                openPauseMenu();
-            }
-        });
-
-        btnBack.setOnMouseClicked(e -> {
             closeStage(stageOptions);
             openPauseMenu();
         });
@@ -1369,6 +1446,11 @@ public class Main extends Application {
             }
         });
 
+        btnColors.setOnMouseClicked(e -> {
+            closeStage(stageOptions);
+            openColorOptionsMenu();
+        });
+
         btnColors.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageOptions);
@@ -1376,9 +1458,28 @@ public class Main extends Application {
             }
         });
 
-        btnColors.setOnMouseClicked(e -> {
+        btnFonts.setOnMouseClicked(e -> {
             closeStage(stageOptions);
-            openColorOptionsMenu();
+            openFontOptionsMenu();
+        });
+
+        btnFonts.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                closeStage(stageOptions);
+                openFontOptionsMenu();
+            }
+        });
+
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageOptions);
+            openPauseMenu();
+        });
+
+        btnBack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                closeStage(stageOptions);
+                openPauseMenu();
+            }
         });
     }
 
@@ -1445,7 +1546,7 @@ public class Main extends Application {
         stageControlOptions.setTitle("Control Options");
         stageControlOptions.setScene(sceneControlOptions);
         stageControlOptions.show();
-        sceneControlOptions.getStylesheets().add("/styling/control-options-menu.css");
+        sceneControlOptions.getStylesheets().add("/resources/styling/control-options-menu.css");
 
         Button[] controlOptionsMenuButtons = new Button[] {
                 btnMoveLeft, btnMoveRight, btnSoftDrop, btnHardDrop,
@@ -1783,25 +1884,13 @@ public class Main extends Application {
         );
 
         Scene sceneColorOptionsMenu = new Scene(gridPaneColorOptionsMenu, (BLOCK_SIZE * 16), (BLOCK_SIZE * 16));
-        sceneColorOptionsMenu.getStylesheets().add("/styling/color-options-menu.css");
+        sceneColorOptionsMenu.getStylesheets().add("/resources/styling/color-options-menu.css");
         stageColorOptionsMenu.setScene(sceneColorOptionsMenu);
         stageColorOptionsMenu.setTitle("Color Options");
         stageColorOptionsMenu.show();
 
         stageColorOptionsMenu.setOnCloseRequest(e -> {
             e.consume();
-            closeStage(stageColorOptionsMenu);
-            openOptionsMenu();
-        });
-
-        btnBack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
-                closeStage(stageColorOptionsMenu);
-                openOptionsMenu();
-            }
-        });
-
-        btnBack.setOnMouseClicked(e -> {
             closeStage(stageColorOptionsMenu);
             openOptionsMenu();
         });
@@ -1895,6 +1984,18 @@ public class Main extends Application {
                 }
             }
         });
+
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageColorOptionsMenu);
+            openOptionsMenu();
+        });
+
+        btnBack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                closeStage(stageColorOptionsMenu);
+                openOptionsMenu();
+            }
+        });
     }
 
 
@@ -1921,6 +2022,51 @@ public class Main extends Application {
 
         eraseAllBlocks(blockType);
         drawAllBlocks(blockType);
+    }
+
+
+    /**
+     * Opens the Font options menu that allows users to select what Font they want used for different
+     * Label types and Button types
+     */
+    private void openFontOptionsMenu() {
+        Stage stageFontOptions = new Stage();
+        GridPane gridPaneFontOptions = new GridPane();
+
+        ObservableList<String> fontOptions = FXCollections.observableArrayList("Monoton", "Press Start 2P");
+        final ComboBox comboBoxFonts = new ComboBox(fontOptions);
+        gridPaneFontOptions.setConstraints(comboBoxFonts, 0, 0);
+        final Button btnBack = new Button("BACK");
+        gridPaneFontOptions.setConstraints(btnBack, 0, 1);
+
+        gridPaneFontOptions.getChildren().addAll(
+                comboBoxFonts,
+                btnBack
+        );
+
+        Scene sceneFontOptions = new Scene(gridPaneFontOptions, (BLOCK_SIZE * 16), (BLOCK_SIZE * 15));
+        stageFontOptions.setTitle("Font Options");
+        stageFontOptions.setScene(sceneFontOptions);
+        stageFontOptions.show();
+        sceneFontOptions.getStylesheets().add("/resources/styling/font-options-menu.css");
+
+        stageFontOptions.setOnCloseRequest(e -> {
+            e.consume();
+            closeStage(stageFontOptions);
+            openOptionsMenu();
+        });
+
+        btnBack.setOnMouseClicked(e -> {
+            closeStage(stageFontOptions);
+            openOptionsMenu();
+        });
+
+        btnBack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                closeStage(stageFontOptions);
+                openOptionsMenu();
+            }
+        });
     }
 
 
