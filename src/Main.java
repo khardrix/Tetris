@@ -1,3 +1,4 @@
+import javafx.geometry.Pos;
 import objects.Block;
 
 import javafx.collections.FXCollections;
@@ -53,8 +54,26 @@ public class Main extends Application {
     private NumberFormat formatNumberWithDelimiter;
     private Timeline timer;
     private Random random;
+    private Font fontAlumniSansInlineOne;
+    private Font fontBlackOpsOne;
+    private Font fontBlakaHollow;
+    private Font fontBungeeShade;
+    private Font fontCabinSketch;
+    private Font fontCreepster;
+    private Font fontDancingScript;
+    private Font fontFasterOne;
+    private Font fontFrederickaTheGreat;
+    private Font fontGraduate;
+    private Font fontGugi;
+    private Font fontHennyPenny;
+    private Font fontIrishGrover;
     private Font fontMonoton;
+    private Font fontPermanentMarker;
     private Font fontPressStart2P;
+    private Font fontRubikMoonrocks;
+    private Font fontRye;
+    private Font fontSquarePeg;
+    private Font fontUnifrakturMaguntia;
     private Pane paneGameBoard;
     private Pane paneScoreDisplay;
     private Pane paneLevelDisplay;
@@ -134,6 +153,7 @@ public class Main extends Application {
     private Rectangle[][] upcomingMiddleBlocks;
     private Rectangle[][] upcomingBottomBlocks;
     private KeyCode[] controlKeys;
+    private String[] fontFileNames;
     private Block tetraminoBlock;
     private Color colorOBlock, colorIBlock, colorSBlock, colorZBlock, colorLBlock, colorJBlock, colorTBlock,
             colorEmptyBlock;
@@ -328,20 +348,155 @@ public class Main extends Application {
         random = new Random();
 
         //////////////////////////////////////// LOAD FONTS //////////////////////////////////////////////
+        // Initialize the String[] array to store all the font file names
+        fontFileNames = new String[20];
+        // Load the Alumni Sans Inline One font
+        fontAlumniSansInlineOne = Font.loadFont(
+                Main.class.getResource("/resources/fonts/AlumniSansInlineOne-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[0] = "/resources/fonts/AlumniSansInlineOne-Regular.ttf";
+
+        // Load the Black Ops One font
+        fontBlackOpsOne = Font.loadFont(
+                Main.class.getResource("/resources/fonts/BlackOpsOne-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[1] = "/resources/fonts/BlackOpsOne-Regular.ttf"
+        ;
+        // Load the Blaka Hollow font
+        fontBlakaHollow = Font.loadFont(
+                Main.class.getResource("/resources/fonts/BlakaHollow-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[2] = "/resources/fonts/BlakaHollow-Regular.ttf";
+
+        // Load the Bungee Shade font
+        fontBungeeShade = Font.loadFont(
+                Main.class.getResource("/resources/fonts/BungeeShade-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[3] = "/resources/fonts/BungeeShade-Regular.ttf";
+
+        // Load the Cabin Sketch font
+        fontCabinSketch = Font.loadFont(
+                Main.class.getResource("/resources/fonts/CabinSketch-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[4] = "/resources/fonts/CabinSketch-Regular.ttf";
+
+        // Load the Creepster font
+        fontCreepster = Font.loadFont(
+                Main.class.getResource("/resources/fonts/Creepster-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[5] = "/resources/fonts/Creepster-Regular.ttf";
+
+        // Load the Dancing Script font
+        fontDancingScript = Font.loadFont(
+                Main.class.getResource("/resources/fonts/DancingScript-VariableFont_wght.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[6] = "/resources/fonts/DancingScript-VariableFont_wght.ttf";
+
+        // Load the Faster One font
+        fontFasterOne = Font.loadFont(
+                Main.class.getResource("/resources/fonts/FasterOne-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[7] = "/resources/fonts/FasterOne-Regular.ttf";
+
+        // Load the Fredericka The Great font
+        fontFrederickaTheGreat = Font.loadFont(
+                Main.class.getResource("/resources/fonts/FrederickatheGreat-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[8] = "/resources/fonts/FrederickatheGreat-Regular.ttf";
+
+        // Load the Graduate font
+        fontGraduate = Font.loadFont(
+                Main.class.getResource("/resources/fonts/Graduate-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[9] = "/resources/fonts/Graduate-Regular.ttf";
+
+        // Load the Gugi font
+        fontGugi = Font.loadFont(
+                Main.class.getResource("/resources/fonts/Gugi-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[10] = "/resources/fonts/Gugi-Regular.ttf";
+
+        // Load the Henny Penny font
+        fontHennyPenny = Font.loadFont(
+                Main.class.getResource("/resources/fonts/HennyPenny-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[11] = "/resources/fonts/HennyPenny-Regular.ttf";
+
+        // Load the Irish Grover font
+        fontIrishGrover = Font.loadFont(
+                Main.class.getResource("/resources/fonts/IrishGrover-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[12] = "/resources/fonts/IrishGrover-Regular.ttf";
+
         // Load the Monoton font
         fontMonoton = Font.loadFont(
                 Main.class.getResource("/resources/fonts/Monoton-Regular.ttf").toExternalForm(),
                 32
         );
+        fontFileNames[13] = "/resources/fonts/Monoton-Regular.ttf";
+
+        // Load the Permanent Marker font
+        fontPermanentMarker = Font.loadFont(
+                Main.class.getResource("/resources/fonts/PermanentMarker-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[14] = "/resources/fonts/PermanentMarker-Regular.ttf";
+
         // Load the Press Start 2P font
         fontPressStart2P = Font.loadFont(
                 Main.class.getResource("/resources/fonts/PressStart2P-Regular.ttf").toExternalForm(),
                 22
         );
+        fontFileNames[15] = "/resources/fonts/PressStart2P-Regular.ttf";
+
+        // Load the Rubik Moonrocks font
+        fontRubikMoonrocks = Font.loadFont(
+                Main.class.getResource("/resources/fonts/RubikMoonrocks-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[16] = "/resources/fonts/RubikMoonrocks-Regular.ttf";
+
+        // Load the Rye font
+        fontRye = Font.loadFont(
+                Main.class.getResource("/resources/fonts/Rye-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[17] = "/resources/fonts/Rye-Regular.ttf";
+
+        // Load the Square Peg font
+        fontSquarePeg = Font.loadFont(
+                Main.class.getResource("/resources/fonts/SquarePeg-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[18] = "/resources/fonts/SquarePeg-Regular.ttf";
+
+        // Load the UnifrakturMaguntia font
+        fontUnifrakturMaguntia = Font.loadFont(
+                Main.class.getResource("/resources/fonts/UnifrakturMaguntia-Regular.ttf").toExternalForm(),
+                24
+        );
+        fontFileNames[19] = "/resources/fonts/UnifrakturMaguntia-Regular.ttf";
+
 
         // Add all Fonts to the Font[] array fonts
         fonts = new Font[] {
-                fontMonoton, fontPressStart2P
+                fontAlumniSansInlineOne, fontBlackOpsOne, fontBlakaHollow, fontBungeeShade, fontCabinSketch,
+                fontCreepster, fontDancingScript, fontFasterOne, fontFrederickaTheGreat, fontGraduate, fontGugi,
+                fontHennyPenny, fontIrishGrover, fontMonoton, fontPermanentMarker, fontPressStart2P,
+                fontRubikMoonrocks, fontRye, fontSquarePeg, fontUnifrakturMaguntia
         };
 
         // Initialize NumberFormat object
@@ -2032,15 +2187,60 @@ public class Main extends Application {
     private void openFontOptionsMenu() {
         Stage stageFontOptions = new Stage();
         GridPane gridPaneFontOptions = new GridPane();
+        gridPaneFontOptions.setId("grid-pane");
 
-        ObservableList<String> fontOptions = FXCollections.observableArrayList("Monoton", "Press Start 2P");
-        final ComboBox comboBoxFonts = new ComboBox(fontOptions);
-        gridPaneFontOptions.setConstraints(comboBoxFonts, 0, 0);
+        HBox hBoxComboBoxes = new HBox();
+
+        ObservableList<String> fontOptions = FXCollections.observableArrayList(
+                "Alumni Sans Inline One", "Black Ops One", "Blaka Hollow", "Bungee Shade",
+                "Cabin Sketch", "Creepster", "Dancing Script", "Faster One", "Fredericka The Great",
+                "Graduate", "Gugi", "Henny Penny", "Irish Grover", "Monoton", "Permanent Marker",
+                "Press Start 2P", "Rubik Moonrocks", "Rye", "Square Peg", "Unifraktur Maguntia"
+        );
+        final ComboBox cmbxFonts = new ComboBox(fontOptions);
+        cmbxFonts.setId("cmbx-fonts");
+
+        Region region = new Region();
+        HBox.setHgrow(region, Priority.ALWAYS);
+
+        ObservableList<Integer> fontSizeOptions = FXCollections.observableArrayList(
+                8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
+                30, 32, 34, 36, 38, 40, 42, 44, 46, 48
+        );
+        final ComboBox cmbxFontSize = new ComboBox(fontSizeOptions);
+        cmbxFontSize.setId("cmbx-font-size");
+
+        hBoxComboBoxes.getChildren().addAll(cmbxFonts, region, cmbxFontSize);
+        gridPaneFontOptions.setConstraints(hBoxComboBoxes, 0, 0);
+
+        final TextArea txtareaDemoDisplayLetters = new TextArea();
+        txtareaDemoDisplayLetters.setText("The quick brown fox jumps over the lazy dog");
+        txtareaDemoDisplayLetters.setEditable(false);
+        txtareaDemoDisplayLetters.setWrapText(true);
+        txtareaDemoDisplayLetters.setId("txtarea-letters");
+        gridPaneFontOptions.setConstraints(txtareaDemoDisplayLetters, 0, 1);
+
+        final TextArea txtareaDemoDisplayNumbers = new TextArea();
+        txtareaDemoDisplayNumbers.setText("1 2 3 4 5 6 7 8 9 0");
+        txtareaDemoDisplayNumbers.setEditable(false);
+        txtareaDemoDisplayNumbers.setId("txtarea-numbers");
+        gridPaneFontOptions.setConstraints(txtareaDemoDisplayNumbers, 0, 2);
+
+        final TextArea txtareaDemoDisplayPunctuationAndGlyphs = new TextArea();
+        txtareaDemoDisplayPunctuationAndGlyphs.setText(", . < > ? / \\ | ; : \" ' [ ] { } \n" +
+                "+ = _ - ` ~ ! @ # $ % ^ & * ( )");
+        txtareaDemoDisplayPunctuationAndGlyphs.setEditable(false);
+        txtareaDemoDisplayPunctuationAndGlyphs.setId("txtarea-glyphs");
+        gridPaneFontOptions.setConstraints(txtareaDemoDisplayPunctuationAndGlyphs, 0, 3);
+
         final Button btnBack = new Button("BACK");
-        gridPaneFontOptions.setConstraints(btnBack, 0, 1);
+        gridPaneFontOptions.setConstraints(btnBack, 0, 4);
 
         gridPaneFontOptions.getChildren().addAll(
-                comboBoxFonts,
+                hBoxComboBoxes,
+                txtareaDemoDisplayLetters,
+                txtareaDemoDisplayNumbers,
+                txtareaDemoDisplayPunctuationAndGlyphs,
                 btnBack
         );
 
@@ -2056,6 +2256,35 @@ public class Main extends Application {
             openOptionsMenu();
         });
 
+        Font fontSelected;
+        final int[] fontSize = {20};
+
+        cmbxFonts.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                System.out.println(newValue.toString());
+
+                int selectionIndex = cmbxFonts.getSelectionModel().getSelectedIndex();
+                System.out.println("selectionIndex = " + selectionIndex);
+
+                Font customFont = getSelectedFontInSelectedFontSize(selectionIndex, fontSize[0]);
+                txtareaDemoDisplayLetters.setFont(customFont);
+                txtareaDemoDisplayNumbers.setFont(customFont);
+                txtareaDemoDisplayPunctuationAndGlyphs.setFont(customFont);
+            }
+        });
+
+        cmbxFontSize.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                fontSize[0] = (int) newValue;
+                System.out.println(fontSize[0]);
+            }
+        });
+
+        int fontSizeTest = fontSize[0];
+        System.out.println("This is outside the handler, but the font size is = " + fontSizeTest);
+
         btnBack.setOnMouseClicked(e -> {
             closeStage(stageFontOptions);
             openOptionsMenu();
@@ -2067,6 +2296,11 @@ public class Main extends Application {
                 openOptionsMenu();
             }
         });
+    }
+
+
+    private Font getSelectedFontInSelectedFontSize(int selectionIndex, int fontSize) {
+        return Font.loadFont(Main.class.getResource(fontFileNames[selectionIndex]).toExternalForm(), fontSize);
     }
 
 

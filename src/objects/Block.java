@@ -5,7 +5,7 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import tetraminos.*;
+import objects.tetraminos.*;
 
 public class Block {
 

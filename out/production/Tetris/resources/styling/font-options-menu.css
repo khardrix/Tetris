@@ -1,0 +1,63 @@
+.root {
+    -fx-vgap: 20px;
+    -fx-background-image: url("/resources/images/background-image_blue-and-purple.jpg");
+    -fx-background-size: stretch;
+}
+
+.text-area *.text {
+    -fx-text-alignment: center;
+}
+
+#txtarea-letters {
+    -fx-alignment: center;
+    -fx-pref-width: 400px; /* NOT WORKING AS OF NOW */
+    -fx-pref-height: 100px;
+}
+
+#txtarea-letters .scroll-bar:horizontal {
+    -fx-pref-height: 10 ;
+}
+
+#txtarea-letters .scroll-bar:vertical {
+    -fx-pref-width: 10 ;
+}
+
+#txtarea-numbers {
+    -fx-alignment: center;
+    -fx-pref-width: 200px; /* NOT WORKING AS OF NOW */
+    -fx-pref-height: 30px;
+}
+
+#txtarea-numbers .scroll-bar:horizontal {
+    -fx-pref-height: 10 ;
+}
+
+#txtarea-numbers .scroll-bar:vertical {
+    -fx-pref-width: 10 ;
+}
+
+#txtarea-glyphs {
+    -fx-alignment: center;
+    -fx-pref-width: 300px; /* NOT WORKING AS OF NOW */
+    -fx-pref-height: 60px;
+}
+
+#txtarea-glyphs .scroll-bar:horizontal {
+    -fx-pref-height: 10 ;
+}
+
+#txtarea-glyphs .scroll-bar:vertical {
+    -fx-pref-width: 10 ;
+}
+
+#cmbx-fonts .combo-box {
+    -fx-alignment: left;
+}
+
+#cmbx-font-size .combo-box {
+    -fx-alignment: right;
+}
+
+#grid-pane {
+    -fx-alignment: center;
+}
