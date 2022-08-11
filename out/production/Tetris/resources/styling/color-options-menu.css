@@ -1,4 +1,9 @@
-package styling;
+.root {
+    -fx-vgap: 10px;
+    -fx-hgap: 20px;
+    -fx-background-image: url("/resources/images/background-image_blue-and-purple.jpg");
+    -fx-background-size: stretch;
+}
 
 .picker-color {
     -fx-pref-width: 200px;
@@ -8,6 +13,7 @@ package styling;
 .color-picker {
     -fx-pref-width: 300px;
     -fx-color-rect-width: 200px;
+    -fx-text-fill: #000;
 }
 
 .color-picker.button > .arrow-button {
@@ -18,4 +24,14 @@ package styling;
     visibility: hidden;
 }
 
+.label {
+    -fx-text-fill: #fff;
+}
 
+.title-label .label {
+    -fx-alignment: center;
+}
+
+.combo-box {
+    -fx-text-fill: #fff;
+}

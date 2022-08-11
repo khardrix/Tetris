@@ -1,4 +1,6 @@
+import javafx.geometry.HPos;
 import javafx.geometry.Pos;
+import javafx.stage.StageStyle;
 import objects.Block;
 
 import javafx.collections.FXCollections;
@@ -74,10 +76,24 @@ public class Main extends Application {
     private Font fontRye;
     private Font fontSquarePeg;
     private Font fontUnifrakturMaguntia;
+    private Font fontContainerTitleLabel;
+    private Font fontInformationTitleLabel;
+    private Font fontInformationValueLabel;
+    private Text textHold;
+    private Text textNext;
+    private Text textScoreTitle;
+    private Text textScoreValue;
+    private Text textLevelTitle;
+    private Text textLevelValue;
+    private Text textLinesTitle;
+    private Text textLinesValue;
+    private Text textTimerTitle;
+    private Text textTimerValue;
     private Pane paneGameBoard;
     private Pane paneScoreDisplay;
     private Pane paneLevelDisplay;
     private Pane paneClearedLinesDisplay;
+    private Pane paneTimer;
     private Pane paneNextTetramino;
     private Pane paneHoldTetramino;
     private Pane paneUpcomingTetraminos;
@@ -86,8 +102,14 @@ public class Main extends Application {
     private Label lblScoreValue;
     private Label lblLevelValue;
     private Label lblClearedLinesValue;
+    private Label lblTimerValue;
+    private Timer timerObj;
     private boolean isHoldTetraminoBoxEmpty;
     private boolean hasListenerBeenAdded;
+    private int hours;
+    private int minutes;
+    private int seconds;
+    private int mSeconds;
     private int dimensions_holdTetraminoWidth;
     private int dimensions_holdTetraminoHeight;
     private int dimensions_boardWidth;
@@ -154,10 +176,14 @@ public class Main extends Application {
     private Rectangle[][] upcomingBottomBlocks;
     private KeyCode[] controlKeys;
     private String[] fontFileNames;
+    private Text[] texts;
     private Block tetraminoBlock;
     private Color colorOBlock, colorIBlock, colorSBlock, colorZBlock, colorLBlock, colorJBlock, colorTBlock,
             colorEmptyBlock;
     private Color colorBorder;
+    private Color colorContainerTitleLabel;
+    private Color colorInformationTitleLabel;
+    private Color colorInformationValueLabel;
     private Stage stagePause;
     private Stage stageOptions;
     private Stage stageControlOptions;
@@ -499,9 +525,43 @@ public class Main extends Application {
                 fontRubikMoonrocks, fontRye, fontSquarePeg, fontUnifrakturMaguntia
         };
 
+        fontContainerTitleLabel = getSelectedFontInSelectedFontSize(0, 54);
+        fontInformationTitleLabel = getSelectedFontInSelectedFontSize(0, 48);
+        fontInformationValueLabel = getSelectedFontInSelectedFontSize(0, 48);
+
+        // Initialize the Text variables
+        textHold = new Text("HOLD");
+        textNext = new Text("NEXT");
+        textScoreTitle = new Text("Score: ");
+        textScoreValue = new Text("0");
+        textLevelTitle = new Text("Level: ");
+        textLevelValue = new Text(String.format("%02d", 0));
+        textLinesTitle = new Text("Lines: ");
+        textLinesValue = new Text("0");
+        textTimerTitle = new Text("Time: ");
+        textTimerValue = new Text("00 : 00 : 00 : 000");
+
+
+        // Populate the Text[] array texts
+        texts = new Text[] {
+                textHold, textNext, textScoreTitle, textScoreValue, textLevelTitle,
+                textLevelValue, textLinesTitle, textLinesValue, textTimerTitle, textTimerValue
+        };
+
+        // Initialize the Color of the Color variables that will determine what Color the corresponding
+        // text will be written in.
+        colorContainerTitleLabel = Color.GREY;
+        colorInformationTitleLabel = Color.RED;
+        colorInformationValueLabel = Color.RED;
+
         // Initialize NumberFormat object
         formatNumberWithDelimiter = NumberFormat.getInstance();
         formatNumberWithDelimiter.setGroupingUsed(true);
+
+        hours = 0;
+        minutes = 0;
+        seconds = 0;
+        mSeconds = 0;
 
         // Set the default controls
         controlKeyMoveLeft = KeyCode.LEFT;
@@ -560,8 +620,15 @@ public class Main extends Application {
         paneHoldTetramino = new Pane();
         drawBorders(paneHoldTetramino, START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO,
                 dimensions_holdTetraminoWidth, dimensions_holdTetraminoHeight);
-        drawTitleLabel(paneHoldTetramino, Color.GREY, 36, "HOLD",
+        drawTitleLabel(
+                paneHoldTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textHold.getText(),
+                START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO, dimensions_holdTetraminoWidth
+        );
+        /*
+        drawTitleLabel(paneHoldTetramino, colorContainerTitleLabel, 36, textHold.getText(),
                 START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO, dimensions_holdTetraminoWidth);
+         */
+
 
         paneGameBoard = new Pane();
         drawBorders(paneGameBoard, START_X_BOARD, START_Y_BOARD, dimensions_boardWidth, dimensions_boardHeight);
@@ -569,8 +636,14 @@ public class Main extends Application {
         paneNextTetramino = new Pane();
         drawBorders(paneNextTetramino, START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO,
                 dimensions_nextTetraminoWidth, dimensions_nextTetraminoHeight);
-        drawTitleLabel(paneNextTetramino, Color.GREY, 36, "NEXT",
+        drawTitleLabel(
+                paneNextTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textNext.getText(),
+                START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO, dimensions_nextTetraminoWidth
+        );
+        /*
+        drawTitleLabel(paneNextTetramino, colorContainerTitleLabel, 36, textNext.getText(),
                 START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO, dimensions_nextTetraminoWidth);
+         */
 
         paneUpcomingTetraminos = new Pane();
         drawBorders(paneUpcomingTetraminos, START_X_UPCOMING_TETRAMINOS, START_Y_UPCOMING_TETRAMINOS,
@@ -581,10 +654,22 @@ public class Main extends Application {
                 dimensions_gameInformationWidth, dimensions_gameInformationHeight);
 
         lblScoreValue = new Label();
-        drawGameInformationTitleLabel(paneScoreDisplay, Color.RED, lblScoreValue, "Score: ",
+        drawGameInformationTitleLabel(
+                paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, textScoreTitle.getText(),
+                fontInformationTitleLabel, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION
+        );
+        drawGameInformationValueLabel(
+                paneScoreDisplay, lblScoreValue, colorInformationValueLabel, fontInformationValueLabel,
+                textScoreValue.getText(), START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION,
+                dimensions_gameInformationWidth
+        );
+        /*
+        drawGameInformationTitleLabel(paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, "Score: ",
                 48, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION);
-        drawGameInformationValueLabel(paneScoreDisplay, lblScoreValue, Color.RED, 48, formatNumberWithDelimiter.format(score),
-                START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION, dimensions_gameInformationWidth);
+        drawGameInformationValueLabel(paneScoreDisplay, lblScoreValue, colorInformationValueLabel, 48,
+                formatNumberWithDelimiter.format(score), START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION,
+                dimensions_gameInformationWidth);
+         */
 
         paneLevelDisplay = new Pane();
         drawGameInformationContainer(paneLevelDisplay, START_X_GAME_INFORMATION,
@@ -593,14 +678,30 @@ public class Main extends Application {
 
         lblLevelValue = new Label();
         levelString = String.format("%02d", level);
-        drawGameInformationTitleLabel(paneLevelDisplay, Color.RED, lblLevelValue, "Level: ",
+        textLevelValue.setText(levelString);
+        drawGameInformationTitleLabel(
+                paneLevelDisplay, colorInformationTitleLabel, lblLevelValue,
+                textLevelTitle.getText(), fontInformationTitleLabel,
+                START_X_GAME_INFORMATION,
+                (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight + dimensions_gameInformationMargin)
+        );
+        drawGameInformationValueLabel(
+                paneLevelDisplay, lblLevelValue, colorInformationValueLabel,
+                fontInformationValueLabel, textLevelValue.getText(),
+                START_X_GAME_INFORMATION,
+                (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight + dimensions_gameInformationMargin),
+                dimensions_gameInformationWidth
+        );
+        /*
+        drawGameInformationTitleLabel(paneLevelDisplay, colorInformationTitleLabel, lblLevelValue, "Level: ",
                 48, START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
                         dimensions_gameInformationMargin));
-        drawGameInformationValueLabel(paneLevelDisplay, lblLevelValue, Color.RED, 48,
+        drawGameInformationValueLabel(paneLevelDisplay, lblLevelValue, colorInformationValueLabel, 48,
                 levelString, START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
                         dimensions_gameInformationMargin), dimensions_gameInformationWidth);
+         */
 
         paneClearedLinesDisplay = new Pane();
         drawGameInformationContainer(paneClearedLinesDisplay, START_X_GAME_INFORMATION,
@@ -609,25 +710,77 @@ public class Main extends Application {
                 dimensions_gameInformationHeight);
 
         lblClearedLinesValue = new Label();
-        drawGameInformationTitleLabel(paneClearedLinesDisplay, Color.RED, lblClearedLinesValue,
+        drawGameInformationTitleLabel(
+                paneClearedLinesDisplay, colorInformationTitleLabel, lblClearedLinesValue,
+                textLinesTitle.getText(), fontInformationTitleLabel,
+                START_X_GAME_INFORMATION,
+                (
+                        START_Y_GAME_INFORMATION +
+                        (2 * dimensions_gameInformationHeight) +
+                        (2 * dimensions_gameInformationMargin)
+                )
+        );
+        drawGameInformationValueLabel(
+                paneClearedLinesDisplay, lblClearedLinesValue, colorInformationValueLabel,
+                fontInformationValueLabel, textLinesValue.getText(),
+                START_X_GAME_INFORMATION,
+                (
+                        START_Y_GAME_INFORMATION +
+                        (2 * dimensions_gameInformationHeight) +
+                        (2 * dimensions_gameInformationMargin)
+                ),
+                dimensions_gameInformationWidth
+        );
+        /*
+        drawGameInformationTitleLabel(paneClearedLinesDisplay, colorInformationTitleLabel, lblClearedLinesValue,
                 "Lines: ", 48, START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + (2 * dimensions_gameInformationHeight) +
                         (2 * dimensions_gameInformationMargin)));
-        drawGameInformationValueLabel(paneClearedLinesDisplay, lblClearedLinesValue, Color.RED,
+        drawGameInformationValueLabel(paneClearedLinesDisplay, lblClearedLinesValue, colorInformationValueLabel,
                 48, String.valueOf(numberOfRowsCleared), START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + (2 * dimensions_gameInformationHeight) +
                         (2 * dimensions_gameInformationMargin)), dimensions_gameInformationWidth);
+         */
+
+        paneTimer = new Pane();
+        drawGameInformationContainer(paneTimer, START_X_GAME_INFORMATION,
+                (START_Y_GAME_INFORMATION + (3 * dimensions_gameInformationHeight) +
+                        (3 * dimensions_gameInformationMargin)), dimensions_gameInformationWidth,
+                dimensions_gameInformationHeight);
+        lblTimerValue = new Label();
+        drawGameInformationTitleLabel(
+                paneTimer, colorInformationTitleLabel, lblTimerValue,
+                textTimerTitle.getText(), fontInformationTitleLabel,
+                START_X_GAME_INFORMATION,
+                (
+                        START_Y_GAME_INFORMATION +
+                                (3 * dimensions_gameInformationHeight) +
+                                (3 * dimensions_gameInformationMargin)
+                )
+        );
+        drawGameInformationValueLabel(
+                paneTimer, lblTimerValue, colorInformationValueLabel,
+                fontInformationValueLabel, textTimerValue.getText(),
+                START_X_GAME_INFORMATION,
+                (
+                        START_Y_GAME_INFORMATION +
+                                (3 * dimensions_gameInformationHeight) +
+                                (3 * dimensions_gameInformationMargin)
+                ),
+                dimensions_gameInformationWidth
+        );
 
         // Add the game board to the main Grid Pane
         gridPaneMain.getChildren().addAll(paneHoldTetramino, paneGameBoard, paneNextTetramino,
-                paneUpcomingTetraminos, paneScoreDisplay, paneLevelDisplay, paneClearedLinesDisplay);
+                paneUpcomingTetraminos, paneScoreDisplay, paneLevelDisplay, paneClearedLinesDisplay, paneTimer
+        );
 
         // Initialize the Scene
         scenePrimary = new Scene(gridPaneMain, (BLOCK_SIZE * (80 / 3.0)), (BLOCK_SIZE * (68 / 3.0)));  // 800X680
 
         // Initialize the default beginning speed
         // Attempting to match NES Tetris speed (800 = speed of level 00, 720 = level 01, 640 = level 02)
-        speed = 800;
+        speed = 799;
 
         // Initialize the boardMatrix
         boardMatrix = new int[numOfRowsBoard][numOfColsBoard];
@@ -694,6 +847,18 @@ public class Main extends Application {
 
         // Initialize the Color of the block borders
         colorBorder = Color.BLACK;
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        startTimer();
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
     }
 
 
@@ -844,6 +1009,105 @@ public class Main extends Application {
 
 
     /**
+     * Sets the String inside the Text object textHold
+     * @param text String parameter - The String that will be used to set the text of Text object textHold
+     */
+    private void setTextHoldString(String text) {
+        this.textHold.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textNext
+     * @param text String parameter - The String that will be used to set the text of Text object textNext
+     */
+    private void setTextNextString(String text) {
+        this.textNext.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textScoreTitle
+     * @param text String parameter - The String that will be used to set the text of Text object textScoreTitle
+     */
+    private void setTextScoreTitleString(String text) {
+        this.textScoreTitle.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textScoreValue
+     * @param text String parameter - The String that will be used to set the text of Text object textScoreValue
+     */
+    private void setTextScoreValueString(String text) {
+        this.textScoreValue.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textLevelTitle
+     * @param text String parameter - The String that will be used to set the text of Text object textLevelTitle
+     */
+    private void setTextLevelTitleString(String text) {
+        this.textLevelTitle.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textLevelValue
+     * @param text String parameter - The String that will be used to set the text of Text object textLevelValue
+     */
+    private void setTextLevelValueString(String text) {
+        this.textLevelValue.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textLinesTitle
+     * @param text String parameter - The String that will be used to set the text of Text object textLinesTitle
+     */
+    private void setTextLinesTitleString(String text) {
+        this.textLinesTitle.setText(text);
+    }
+
+
+    /**
+     * Sets the String inside the Text object textLinesValue
+     * @param text String parameter - The String that will be used to set the text of Text object textLinesValue
+     */
+    private void setTextLinesValueString(String text) {
+        this.textLinesValue.setText(text);
+    }
+
+
+    /**
+     * Sets the Color to write the container text in
+     * @param color Color parameter - set the text of the title Label inside containers to this Color
+     */
+    private void setColorContainerTitleLabel(Color color) {
+        this.colorContainerTitleLabel = color;
+    }
+
+
+    /**
+     * Sets the Color to write the game information title Label's text in
+     * @param color Color parameter - set the text of the title Label inside game information containers to this Color
+     */
+    private void setColorInformationTitleLabel(Color color) {
+        this.colorInformationTitleLabel= color;
+    }
+
+
+    /**
+     * Sets the Color to write the game information value Label's text in
+     * @param color Color parameter - set the text of the value Label inside game information containers to this Color
+     */
+    private void setColorInformationValueLabel(Color color) {
+        this.colorInformationValueLabel= color;
+    }
+
+
+    /**
      * Sets the color of O-Blocks
      * @param color Color parameter - set O-Blocks to this Color
      */
@@ -955,6 +1219,33 @@ public class Main extends Application {
 
 
     /**
+     * Overloaded method (traded int fontSize, for Font font). Draws the specified value to the specified
+     * Label in the specified Pane at the specified location and size
+     * @param pane Pane parameter - Pane to draw value in
+     * @param lbl Label paramter - Label to draw value in
+     * @param color Color parameter - Color to draw the value in
+     * @param font Font parameter - The Font (including font size) to draw the title Label in
+     * @param labelValue String parameter - String representation of the value to draw
+     * @param startX int parameter - x-coordinate to start drawing in specified Pane
+     * @param startY int parameter - y-coordinate to start drawing in specified Pane
+     * @param width int parameter - width in pixels of the drawn container
+     */
+    private void drawGameInformationValueLabel(
+            Pane pane, Label lbl, Color color, Font font, String labelValue, int startX, int startY, int width
+    ) {
+        lbl.setLayoutX(((startX + (double)width / 2.7) + 10));
+        lbl.setLayoutY((startY - 10));
+        lbl.setTextFill(color);
+        lbl.setFont(font);
+        lbl.setText(labelValue);
+
+        lbl.getStyleClass().add("value-label");
+
+        pane.getChildren().add(lbl);
+    }
+
+
+    /**
      * Draws the Label title and sets the labelFor property of the specified Label in the specified Pane
      * at the specified location and size
      * @param pane Pane parameter - Pane to draw the Label in
@@ -988,6 +1279,34 @@ public class Main extends Application {
         lbl.setTextFill(color);
         // lbl.setFont(font);
         lbl.setFont(fontPressStart2P);
+
+        lbl.getStyleClass().add("title-label");
+
+        pane.getChildren().add(lbl);
+    }
+
+
+    /**
+     * Overloaded method (traded int fontSize, for Font font). Draws a title Label and sets the labelFor
+     * property of the specified Label in the specified Pane at the specified location and size
+     * @param pane Pane parameter - Pane to draw the Label in
+     * @param color Color parameter - Color to draw the Label in
+     * @param labelFor Label parameter - Label to set the labelFor property to
+     * @param labelText String parameter - String that makes up the text of the Label
+     * @param font Font parameter - The Font (including font size) to draw the title Label in
+     * @param startX int parameter - x-coordinate to start drawing in the specified Pane
+     * @param startY int parameter - y-coordinate to start drawing in the specified Pane
+     */
+    private void drawGameInformationTitleLabel(
+            Pane pane, Color color, Label labelFor, String labelText, Font font, int startX, int startY
+    ) {
+        Label lbl = new Label(labelText);
+
+        lbl.setLabelFor(labelFor);
+        lbl.setLayoutX((startX + 10));
+        lbl.setLayoutY((startY - 10));
+        lbl.setTextFill(color);
+        lbl.setFont(font);
 
         lbl.getStyleClass().add("title-label");
 
@@ -1059,7 +1378,33 @@ public class Main extends Application {
 
         Font font = new Font(fontSize);
         Label lbl = new Label(labelText);
-        // fontMonoton = new Font(26);
+
+        lbl.setLabelFor(pane);
+        lbl.setLayoutX(
+                (startX + ((double)width / 4.5))
+        );
+        lbl.setLayoutY((startY));
+        lbl.setTextFill(color);
+        lbl.setFont(font);
+        pane.getChildren().add(lbl);
+    }
+
+
+    /**
+     * Overloaded method that draws the title Label for a game information display element and
+     * allows the Font to be passed in as a parameter
+     * @param pane Pane parameter - Pane to draw the Label in
+     * @param color Color parameter - Color to draw the Label in
+     * @param font Font parameter - Set the Font (including font size) of the Label
+     * @param labelText String parameter - String text to draw in the specified Label
+     * @param startX int parameter - x-coordinate to start drawing in the specified Pane
+     * @param startY int parameter - y-coordinate to start drawing in the specified Pane
+     * @param width int parameter - width in pixels of container for the Label
+     */
+    private void drawTitleLabel(
+            Pane pane, Color color, Font font, String labelText, int startX, int startY, int width
+    ) {
+        Label lbl = new Label(labelText);
 
         lbl.setLabelFor(pane);
         lbl.setLayoutX(
@@ -1322,10 +1667,58 @@ public class Main extends Application {
 
 
     /**
-     * NOT IMPLEMENTED YET - TO BE USED IN STOP WATCH IN GAME INFORMATION DISPLAY
+     * Starts a Timer Object to keep track of the time expired during game play
      */
     private void startTimer() {
-        // timestamp = System.currentTimeMillis() - timeFraction;
+        timerObj = new Timer();
+
+        timerObj.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run () {
+                    Platform.runLater(() -> {
+                        if (mSeconds >= 1_000) {
+                            seconds++;
+                            mSeconds = 0;
+
+                            if (seconds >= 60) {
+                                minutes++;
+                                seconds = 0;
+
+                                if (minutes >= 60) {
+                                    hours++;
+                                    minutes = 0;
+                                }
+                            }
+                        }
+
+                        String timerStr = String.format("%02d : %02d : %02d : %03d", hours, minutes, seconds, mSeconds);
+                        updateTimerValueAndLabel(timerStr);
+                        mSeconds++;
+                    });
+                }
+        }, 0, 1);
+    }
+
+
+    /**
+     * Removes the expired Label lblTimerValue, updates the time String, update the Label lblTimerValue to
+     * the new time String, then adds Label lblTimerValue to the Pane paneTimer
+     * @param strTime String parameter - A String formatted like a stopwatch with
+     *                two digits for hours, minutes and seconds and three digits for milliseconds
+     */
+    private void updateTimerValueAndLabel(String strTime) {
+        paneTimer.getChildren().remove(lblTimerValue);
+        textTimerValue.setText(strTime);
+        lblTimerValue.setText(textTimerValue.getText());
+        paneTimer.getChildren().add(lblTimerValue);
+    }
+
+
+    /**
+     * Calls .cancel() on the Timer Object (when you create a new Timer obj, using .cancel() functions like pause)
+     */
+    private void pauseTimerObj() {
+        this.timerObj.cancel();
     }
 
 
@@ -1347,6 +1740,7 @@ public class Main extends Application {
         confirmation.showAndWait();
 
         if (confirmation.getResult() == ButtonType.YES) {
+            pauseTimerObj();
             Platform.exit();
         } else {
             if (!isPaused) {
@@ -1483,6 +1877,8 @@ public class Main extends Application {
      * NEED TO REFACTOR (CREATE PAUSE MENU IN SEPARATE METHOD) - Creates and displays the pause menu
      */
     private void openPauseMenu() {
+        pauseTimerObj();
+
         GridPane gridPanePauseMenu = new GridPane();
         VBox vBoxPauseMenu = new VBox();
 
@@ -1558,6 +1954,7 @@ public class Main extends Application {
      */
     private void closePauseMenu() {
         closeStage(stagePause);
+        startTimer();
         runGameAtSpecifiedSpeed(speed);
     }
 
@@ -1964,7 +2361,9 @@ public class Main extends Application {
         GridPane gridPaneColorOptionsMenu = new GridPane();
 
         Label lblTetriminoColors = new Label("Tetrimino Colors");
-        gridPaneColorOptionsMenu.setConstraints(lblTetriminoColors, 0, 0);
+        lblTetriminoColors.getStyleClass().add("title-label");
+        GridPane.setHalignment(lblTetriminoColors, HPos.CENTER);
+        gridPaneColorOptionsMenu.setConstraints(lblTetriminoColors, 0, 0, 2, 1);
         Label lblColorOBlock = new Label("O-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorOBlock, 0, 1);
         ColorPicker colorPickerOBlock = new ColorPicker(colorOBlock);
@@ -1973,37 +2372,46 @@ public class Main extends Application {
         Label lblColorIBlock = new Label("I-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorIBlock, 0, 2);
         ColorPicker colorPickerIBlock = new ColorPicker(colorIBlock);
-        colorPickerIBlock.getStyleClass().add("split-button");
+        colorPickerIBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerIBlock, 1, 2);
         Label lblColorSBlock = new Label("S-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorSBlock, 0, 3);
         ColorPicker colorPickerSBlock = new ColorPicker(colorSBlock);
+        colorPickerSBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerSBlock, 1, 3);
         Label lblColorZBlock = new Label("Z-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorZBlock, 0, 4);
         ColorPicker colorPickerZBlock = new ColorPicker(colorZBlock);
+        colorPickerZBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerZBlock, 1, 4);
         Label lblColorLBlock = new Label("L-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorLBlock, 0, 5);
         ColorPicker colorPickerLBlock = new ColorPicker(colorLBlock);
+        colorPickerLBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerLBlock, 1, 5);
         Label lblColorJBlock = new Label("J-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorJBlock, 0, 6);
         ColorPicker colorPickerJBlock = new ColorPicker(colorJBlock);
+        colorPickerJBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerJBlock, 1, 6);
         Label lblColorTBlock = new Label("T-Block");
         gridPaneColorOptionsMenu.setConstraints(lblColorTBlock, 0, 7);
         ColorPicker colorPickerTBlock = new ColorPicker(colorTBlock);
+        colorPickerTBlock.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerTBlock, 1, 7);
         Label lblMoreColorOptions = new Label("More Color Options");
-        gridPaneColorOptionsMenu.setConstraints(lblMoreColorOptions, 0, 8);
+        lblMoreColorOptions.getStyleClass().add("title-label");
+        GridPane.setHalignment(lblMoreColorOptions, HPos.CENTER);
+        gridPaneColorOptionsMenu.setConstraints(lblMoreColorOptions, 0, 8, 2, 1);
         Label lblColorBlockBorderAndGrid = new Label("Block Border / Grid Color");
         gridPaneColorOptionsMenu.setConstraints(lblColorBlockBorderAndGrid, 0, 9);
         ColorPicker colorPickerBlockBorderAndGrid = new ColorPicker(colorBorder);
+        colorPickerBlockBorderAndGrid.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerBlockBorderAndGrid, 1, 9);
         Label lblColorGameBoard = new Label("Game Board");
         gridPaneColorOptionsMenu.setConstraints(lblColorGameBoard, 0, 10);
         ColorPicker colorPickerGameBoard = new ColorPicker(colorEmptyBlock);
+        colorPickerGameBoard.getStyleClass().add("button");
         gridPaneColorOptionsMenu.setConstraints(colorPickerGameBoard, 1, 10);
         Label lblGrid = new Label("Grid");
         ToggleGroup toggleGroupGrid = new ToggleGroup();
@@ -2187,7 +2595,7 @@ public class Main extends Application {
     private void openFontOptionsMenu() {
         Stage stageFontOptions = new Stage();
         GridPane gridPaneFontOptions = new GridPane();
-        gridPaneFontOptions.setId("grid-pane");
+        gridPaneFontOptions.setId("grid-pane-font");
 
         HBox hBoxComboBoxes = new HBox();
 
@@ -2200,8 +2608,8 @@ public class Main extends Application {
         final ComboBox cmbxFonts = new ComboBox(fontOptions);
         cmbxFonts.setId("cmbx-fonts");
 
-        Region region = new Region();
-        HBox.setHgrow(region, Priority.ALWAYS);
+        Region region1 = new Region();
+        HBox.setHgrow(region1, Priority.ALWAYS);
 
         ObservableList<Integer> fontSizeOptions = FXCollections.observableArrayList(
                 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
@@ -2210,34 +2618,61 @@ public class Main extends Application {
         final ComboBox cmbxFontSize = new ComboBox(fontSizeOptions);
         cmbxFontSize.setId("cmbx-font-size");
 
-        hBoxComboBoxes.getChildren().addAll(cmbxFonts, region, cmbxFontSize);
+        Region region2 = new Region();
+        HBox.setHgrow(region2, Priority.ALWAYS);
+
+        ObservableList<String> targetElements = FXCollections.observableArrayList(
+                "Tetramino Container Title", "Game Information Title", "Game Information Value"
+        );
+        final ComboBox cmbxTargetElement = new ComboBox(targetElements);
+        cmbxTargetElement.setId("cmbx-target-elements");
+
+        hBoxComboBoxes.getChildren().addAll(cmbxFonts, region1, cmbxFontSize, region2, cmbxTargetElement);
         gridPaneFontOptions.setConstraints(hBoxComboBoxes, 0, 0);
 
+        // HBox hBoxFontColor = new HBox();
+
+        // Label lblFontColor = new Label("Font Color: ");
+        ColorPicker colorPickerTargetElement = new ColorPicker(colorContainerTitleLabel);
+        colorPickerTargetElement.getStyleClass().add("button");
+
+        // hBoxFontColor.getChildren().addAll(lblFontColor, colorPickerTargetElement);
+        // gridPaneFontOptions.setConstraints(hBoxFontColor, 0, 1);
+        gridPaneFontOptions.setConstraints(colorPickerTargetElement, 0, 1);
+
+        final Button btnApply = new Button("Apply");
+        gridPaneFontOptions.setConstraints(btnApply, 0, 2);
+
         final TextArea txtareaDemoDisplayLetters = new TextArea();
-        txtareaDemoDisplayLetters.setText("The quick brown fox jumps over the lazy dog");
+        txtareaDemoDisplayLetters.setText("the quick brown fox jumps over the lazy dog " +
+                "\n\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG");
         txtareaDemoDisplayLetters.setEditable(false);
         txtareaDemoDisplayLetters.setWrapText(true);
         txtareaDemoDisplayLetters.setId("txtarea-letters");
-        gridPaneFontOptions.setConstraints(txtareaDemoDisplayLetters, 0, 1);
+        gridPaneFontOptions.setConstraints(txtareaDemoDisplayLetters, 0, 3);
 
         final TextArea txtareaDemoDisplayNumbers = new TextArea();
         txtareaDemoDisplayNumbers.setText("1 2 3 4 5 6 7 8 9 0");
         txtareaDemoDisplayNumbers.setEditable(false);
+        txtareaDemoDisplayNumbers.setWrapText(true);
         txtareaDemoDisplayNumbers.setId("txtarea-numbers");
-        gridPaneFontOptions.setConstraints(txtareaDemoDisplayNumbers, 0, 2);
+        gridPaneFontOptions.setConstraints(txtareaDemoDisplayNumbers, 0, 4);
 
         final TextArea txtareaDemoDisplayPunctuationAndGlyphs = new TextArea();
         txtareaDemoDisplayPunctuationAndGlyphs.setText(", . < > ? / \\ | ; : \" ' [ ] { } \n" +
                 "+ = _ - ` ~ ! @ # $ % ^ & * ( )");
         txtareaDemoDisplayPunctuationAndGlyphs.setEditable(false);
+        txtareaDemoDisplayPunctuationAndGlyphs.setWrapText(true);
         txtareaDemoDisplayPunctuationAndGlyphs.setId("txtarea-glyphs");
-        gridPaneFontOptions.setConstraints(txtareaDemoDisplayPunctuationAndGlyphs, 0, 3);
+        gridPaneFontOptions.setConstraints(txtareaDemoDisplayPunctuationAndGlyphs, 0, 5);
 
         final Button btnBack = new Button("BACK");
-        gridPaneFontOptions.setConstraints(btnBack, 0, 4);
+        gridPaneFontOptions.setConstraints(btnBack, 0, 6);
 
         gridPaneFontOptions.getChildren().addAll(
                 hBoxComboBoxes,
+                colorPickerTargetElement,    // hBoxFontColor,
+                btnApply,
                 txtareaDemoDisplayLetters,
                 txtareaDemoDisplayNumbers,
                 txtareaDemoDisplayPunctuationAndGlyphs,
@@ -2256,21 +2691,33 @@ public class Main extends Application {
             openOptionsMenu();
         });
 
-        Font fontSelected;
+        btnApply.setDisable(true);
+
+        final Font[] fontSelected = new Font[1];
         final int[] fontSize = {20};
+        final int[] targetElement = {-1};
+        final boolean[] hasFontBeenSelected = {false};
+        final boolean[] hasFontSizeBeenSelected = {false};
+        final boolean[] hasTargetElementBeenSelected = {false};
+        final int[] fontSelectionIndex = {-1};
 
         cmbxFonts.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                 System.out.println(newValue.toString());
+                hasFontBeenSelected[0] = true;
 
-                int selectionIndex = cmbxFonts.getSelectionModel().getSelectedIndex();
-                System.out.println("selectionIndex = " + selectionIndex);
+                if (hasFontSizeBeenSelected[0] && hasTargetElementBeenSelected[0]) {
+                    btnApply.setDisable(false);
+                }
 
-                Font customFont = getSelectedFontInSelectedFontSize(selectionIndex, fontSize[0]);
-                txtareaDemoDisplayLetters.setFont(customFont);
-                txtareaDemoDisplayNumbers.setFont(customFont);
-                txtareaDemoDisplayPunctuationAndGlyphs.setFont(customFont);
+                fontSelectionIndex[0] = cmbxFonts.getSelectionModel().getSelectedIndex();
+                System.out.println("fontSelectionIndex = " + fontSelectionIndex[0]);
+
+                fontSelected[0] = getSelectedFontInSelectedFontSize(fontSelectionIndex[0], fontSize[0]);
+                txtareaDemoDisplayLetters.setFont(fontSelected[0]);
+                txtareaDemoDisplayNumbers.setFont(fontSelected[0]);
+                txtareaDemoDisplayPunctuationAndGlyphs.setFont(fontSelected[0]);
             }
         });
 
@@ -2279,11 +2726,132 @@ public class Main extends Application {
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                 fontSize[0] = (int) newValue;
                 System.out.println(fontSize[0]);
+                hasFontSizeBeenSelected[0] = true;
+
+                if (hasFontBeenSelected[0] && hasTargetElementBeenSelected[0]) {
+                    btnApply.setDisable(false);
+                }
+
+                if (!hasFontBeenSelected[0]) {
+                    fontSelected[0] = getSelectedFontInSelectedFontSize(0, fontSize[0]);
+                } else {
+                    fontSelected[0] = getSelectedFontInSelectedFontSize(fontSelectionIndex[0], fontSize[0]);
+                }
+
+                txtareaDemoDisplayLetters.setFont(fontSelected[0]);
+                txtareaDemoDisplayNumbers.setFont(fontSelected[0]);
+                txtareaDemoDisplayPunctuationAndGlyphs.setFont(fontSelected[0]);
+            }
+        });
+
+        cmbxTargetElement.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                targetElement[0] = cmbxTargetElement.getSelectionModel().getSelectedIndex();
+                System.out.println(targetElement[0]);
+                hasTargetElementBeenSelected[0] = true;
+
+                if (hasFontBeenSelected[0] && hasFontSizeBeenSelected[0]) {
+                    btnApply.setDisable(false);
+                }
             }
         });
 
         int fontSizeTest = fontSize[0];
         System.out.println("This is outside the handler, but the font size is = " + fontSizeTest);
+
+        btnApply.setOnMouseClicked(e -> {
+            if (hasFontBeenSelected[0] && hasFontSizeBeenSelected[0] || hasTargetElementBeenSelected[0]) {
+                Color color = colorPickerTargetElement.getValue();
+                Font fontCurrent = Font.loadFont(
+                        Main.class.getResource(fontFileNames[fontSelectionIndex[0]]).toExternalForm(), fontSize[0]
+                );
+
+                if (targetElement[0] == 0) {
+                    colorContainerTitleLabel = color;
+                    fontContainerTitleLabel = fontCurrent;
+
+                    // Draw Hold Label
+                    drawTitleLabel(
+                            paneHoldTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textHold.getText(),
+                            START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO, dimensions_holdTetraminoWidth
+                    );
+
+                    // Draw Next Label
+                    drawTitleLabel(
+                            paneNextTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textNext.getText(),
+                            START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO, dimensions_nextTetraminoWidth
+                    );
+                } else if (targetElement[0] == 1) {
+                    colorInformationTitleLabel = color;
+                    fontInformationTitleLabel = fontCurrent;
+
+                    // Draw Score Title Label
+                    drawGameInformationTitleLabel(
+                            paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, textScoreTitle.getText(),
+                            fontInformationTitleLabel, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION
+                    );
+
+                    // Draw Level Title Label
+                    drawGameInformationTitleLabel(
+                            paneLevelDisplay, colorInformationTitleLabel, lblLevelValue,
+                            textLevelTitle.getText(), fontInformationTitleLabel,
+                            START_X_GAME_INFORMATION,
+                            (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
+                                    dimensions_gameInformationMargin)
+                    );
+
+                    // Draw Cleared Lines Title Label
+                    drawGameInformationTitleLabel(
+                            paneClearedLinesDisplay, colorInformationTitleLabel, lblClearedLinesValue,
+                            textLinesTitle.getText(), fontInformationTitleLabel,
+                            START_X_GAME_INFORMATION,
+                            (
+                                    START_Y_GAME_INFORMATION +
+                                    (2 * dimensions_gameInformationHeight) +
+                                    (2 * dimensions_gameInformationMargin)
+                            )
+                    );
+                } else if (targetElement[0] == 2) {
+                    colorInformationValueLabel = color;
+                    fontInformationValueLabel = fontCurrent;
+
+                    paneScoreDisplay.getChildren().remove(lblScoreValue);
+                    paneLevelDisplay.getChildren().remove(lblLevelValue);
+                    paneClearedLinesDisplay.getChildren().remove(lblClearedLinesValue);
+
+                    // Draw Score Value Label
+                    drawGameInformationValueLabel(
+                            paneScoreDisplay, lblScoreValue, colorInformationValueLabel, fontInformationValueLabel,
+                            textScoreValue.getText(), START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION,
+                            dimensions_gameInformationWidth
+                    );
+
+                    // Draw Level Value Label
+                    drawGameInformationValueLabel(
+                            paneLevelDisplay, lblLevelValue, colorInformationValueLabel,
+                            fontInformationValueLabel, textLevelValue.getText(),
+                            START_X_GAME_INFORMATION,
+                            (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
+                                    dimensions_gameInformationMargin),
+                            dimensions_gameInformationWidth
+                    );
+
+                    // Draw Cleared Lines Value Label
+                    drawGameInformationValueLabel(
+                            paneClearedLinesDisplay, lblClearedLinesValue, colorInformationValueLabel,
+                            fontInformationValueLabel, textLinesValue.getText(),
+                            START_X_GAME_INFORMATION,
+                            (
+                                    START_Y_GAME_INFORMATION +
+                                    (2 * dimensions_gameInformationHeight) +
+                                    (2 * dimensions_gameInformationMargin)
+                            ),
+                            dimensions_gameInformationWidth
+                    );
+                }
+            }
+        });
 
         btnBack.setOnMouseClicked(e -> {
             closeStage(stageFontOptions);
@@ -2346,6 +2914,12 @@ public class Main extends Application {
 
         // Reset speed to initial value of 800ms between each time a Tetramino moves down one row
         speed = 800;
+
+        // Reset Timer values
+        hours = 0;
+        minutes = 0;
+        seconds = 0;
+        mSeconds = 0;
 
         // Initialize a new first falling Tetramino
         fallingTetraminoType = generateRandomTetraminoType();
@@ -2554,19 +3128,20 @@ public class Main extends Application {
         ////////////////////////////////////////////////////////////////////////////////////////////////////
          */
         switch (level) {
-            case 1:     speed = 720;    break;
-            case 2:     speed = 640;    break;
-            case 3:     speed = 560;    break;
-            case 4:     speed = 480;    break;
-            case 5:     speed = 400;    break;
-            case 6:     speed = 320;    break;
-            case 7:     speed = 240;    break;
-            case 8:     speed = 160;    break;
-            case 9:     speed = 128;    break;
-            case 10:    speed = 112;    break;
-            case 13:    speed = 96;     break;
-            case 16:    speed = 80;     break;
-            case 19:    speed = 64;     break;
+            case 1:     speed = 716;    break;
+            case 2:     speed = 632;    break;
+            case 3:     speed = 549;    break;
+            case 4:     speed = 466;    break;
+            case 5:     speed = 383;    break;
+            case 6:     speed = 300;    break;
+            case 7:     speed = 216;    break;
+            case 8:     speed = 133;    break;
+            case 9:     speed = 100;    break;
+            case 10:    speed = 83;     break;
+            case 13:    speed = 67;     break;
+            case 16:    speed = 50;     break;
+            case 19:    speed = 33;     break;
+            case 29:    speed = 17;     break;
             default:    break;
         }
     }
@@ -2577,7 +3152,7 @@ public class Main extends Application {
      * @return boolean value (true - call incrementLevel(), false - not time to call incrementLevel())
      */
     private boolean shouldLevelBeIncremented() {
-        return (numberOfRowsCleared % 1 == 0);
+        return (numberOfRowsCleared % 10 == 0);
     }
 
 
@@ -2913,18 +3488,123 @@ public class Main extends Application {
      */
     private void lostGame() {
         timer.stop();
+        pauseTimerObj();
 
+        /*
         Alert gameLostAlert = new Alert(Alert.AlertType.INFORMATION, "YOU LOST!", ButtonType.OK);
         gameLostAlert.setTitle("GAME OVER");
-        gameLostAlert.setHeaderText("You lost! " +
+        gameLostAlert.setHeaderText(
+                "You lost! " +
                 "\n\tscore\t     : " + score +
                 "\n\tlevel\t\t     : " + levelString +
-                "\n\tcleared lines : " + numberOfRowsCleared);
+                "\n\tcleared lines : " + numberOfRowsCleared +
+                "\n\ttime\t\t     : " +
+                        String.format("%02d : %02d : %02d : %03d", hours, minutes, seconds, mSeconds)
+        );
         gameLostAlert.show();
 
         if (gameLostAlert.getResult() == ButtonType.OK) {
+            System.out.println("lostGame(): ENTERED if (gameLostAlert.getResult() == ButtonType.OK) {...}");
+            timerObj.cancel();
             Platform.exit();
+        } else {
+            System.out.println("lostGame(): ENTERED else OF if (gameLostAlert.getResult() == ButtonType.OK) {...}");
         }
+         */
+
+        GridPane gridPaneLostGame = new GridPane();
+
+        Label lblLostGameTitle = new Label("YOU LOST!");
+        gridPaneLostGame.setConstraints(lblLostGameTitle, 0, 0);
+
+        HBox hBoxResultInformation = new HBox();
+
+        VBox vBoxCategoryTitles = new VBox();
+        Label lblScoreTitle = new Label("Score: ");
+        Label lblLevelTitle = new Label("Level: ");
+        Label lblLinesTitle = new Label("Cleared Lines: ");
+        Label lblTimeTitle = new Label("Time: ");
+        vBoxCategoryTitles.getChildren().addAll(lblScoreTitle, lblLevelTitle, lblLinesTitle, lblTimeTitle);
+
+        VBox vBoxCategoryResults = new VBox();
+        Label lblScoreResult = new Label(formatNumberWithDelimiter.format(score));
+        Label lblLevelResult = new Label(String.format("%02d", level));
+        Label lblLinesResult = new Label(String.valueOf(numberOfRowsCleared));
+        Label lblTimeResult = new Label(String.format("%02d : %02d : %02d : %03d", hours, minutes, seconds, mSeconds));
+        vBoxCategoryResults.getChildren().addAll(lblScoreResult, lblLevelResult, lblLinesResult, lblTimeResult);
+
+        hBoxResultInformation.getChildren().addAll(vBoxCategoryTitles, vBoxCategoryResults);
+        gridPaneLostGame.setConstraints(hBoxResultInformation, 0, 1);
+
+        HBox hBoxButtons = new HBox();
+        Button btnReset = new Button("RESET");
+        Region regionMiddle = new Region();
+        HBox.setHgrow(regionMiddle, Priority.ALWAYS);
+        Button btnExit = new Button("EXIT");
+        hBoxButtons.getChildren().addAll(btnReset, regionMiddle, btnExit);
+        gridPaneLostGame.setConstraints(hBoxButtons, 0, 2);
+
+        gridPaneLostGame.getChildren().addAll(lblLostGameTitle, hBoxResultInformation, hBoxButtons);
+
+        Scene sceneLostGame = new Scene(gridPaneLostGame, (BLOCK_SIZE * 15), (BLOCK_SIZE * 8));
+
+        Stage stageLostGame = new Stage();
+        stageLostGame.initStyle(StageStyle.UTILITY);
+        stageLostGame.setScene(sceneLostGame);
+        stageLostGame.setTitle("GAME OVER");
+        stageLostGame.show();
+
+        stageLostGame.setOnCloseRequest(e -> {
+            e.consume();
+            closeStage(stageLostGame);
+            Platform.exit();
+        });
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////// SOMETHING NOT WORKING CORRECTLY WITH RESETTING THE GAME /////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        btnReset.setOnMouseClicked(e -> {
+            closeStage(stageLostGame);
+            timer.play();
+            resetGame();
+        });
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////// SOMETHING NOT WORKING CORRECTLY WITH RESETTING THE GAME /////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        btnReset.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                closeStage(stageLostGame);
+                timer.play();
+                resetGame();
+            }
+        });
+
+        btnExit.setOnMouseClicked(e -> {
+            Platform.exit();
+        });
+
+        btnExit.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
+                Platform.exit();
+            }
+        });
     }
 
 
