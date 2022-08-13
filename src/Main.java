@@ -1,5 +1,4 @@
 import javafx.geometry.HPos;
-import javafx.geometry.Pos;
 import javafx.stage.StageStyle;
 import objects.Block;
 
@@ -99,6 +98,12 @@ public class Main extends Application {
     private Pane paneUpcomingTetraminos;
     // private GridPane gridPaneMain;
     private Scene scenePrimary;
+    private Label lblHoldTitle;
+    private Label lblNextTitle;
+    private Label lblScoreTitle;
+    private Label lblLevelTitle;
+    private Label lblClearedLinesTitle;
+    private Label lblTimerTitle;
     private Label lblScoreValue;
     private Label lblLevelValue;
     private Label lblClearedLinesValue;
@@ -228,6 +233,7 @@ public class Main extends Application {
         placeFallingTetraminoIntoBoardMatrix();
         drawFallingTetramino();
 
+        startTimer();
         runGameAtSpecifiedSpeed(speed);
 
         //////////////////////////////////////////// CONTROLS ////////////////////////////////////////////////////
@@ -618,32 +624,25 @@ public class Main extends Application {
 
 
         paneHoldTetramino = new Pane();
+        lblHoldTitle = new Label(textHold.getText());
         drawBorders(paneHoldTetramino, START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO,
                 dimensions_holdTetraminoWidth, dimensions_holdTetraminoHeight);
         drawTitleLabel(
-                paneHoldTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textHold.getText(),
+                paneHoldTetramino, colorContainerTitleLabel, fontContainerTitleLabel, lblHoldTitle,
                 START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO, dimensions_holdTetraminoWidth
         );
-        /*
-        drawTitleLabel(paneHoldTetramino, colorContainerTitleLabel, 36, textHold.getText(),
-                START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO, dimensions_holdTetraminoWidth);
-         */
-
 
         paneGameBoard = new Pane();
         drawBorders(paneGameBoard, START_X_BOARD, START_Y_BOARD, dimensions_boardWidth, dimensions_boardHeight);
 
         paneNextTetramino = new Pane();
+        lblNextTitle = new Label(textNext.getText());
         drawBorders(paneNextTetramino, START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO,
                 dimensions_nextTetraminoWidth, dimensions_nextTetraminoHeight);
         drawTitleLabel(
-                paneNextTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textNext.getText(),
+                paneNextTetramino, colorContainerTitleLabel, fontContainerTitleLabel, lblNextTitle,
                 START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO, dimensions_nextTetraminoWidth
         );
-        /*
-        drawTitleLabel(paneNextTetramino, colorContainerTitleLabel, 36, textNext.getText(),
-                START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO, dimensions_nextTetraminoWidth);
-         */
 
         paneUpcomingTetraminos = new Pane();
         drawBorders(paneUpcomingTetraminos, START_X_UPCOMING_TETRAMINOS, START_Y_UPCOMING_TETRAMINOS,
@@ -653,9 +652,10 @@ public class Main extends Application {
         drawGameInformationContainer(paneScoreDisplay, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION,
                 dimensions_gameInformationWidth, dimensions_gameInformationHeight);
 
+        lblScoreTitle = new Label(textScoreTitle.getText());
         lblScoreValue = new Label();
         drawGameInformationTitleLabel(
-                paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, textScoreTitle.getText(),
+                paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, lblScoreTitle,
                 fontInformationTitleLabel, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION
         );
         drawGameInformationValueLabel(
@@ -663,25 +663,19 @@ public class Main extends Application {
                 textScoreValue.getText(), START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION,
                 dimensions_gameInformationWidth
         );
-        /*
-        drawGameInformationTitleLabel(paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, "Score: ",
-                48, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION);
-        drawGameInformationValueLabel(paneScoreDisplay, lblScoreValue, colorInformationValueLabel, 48,
-                formatNumberWithDelimiter.format(score), START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION,
-                dimensions_gameInformationWidth);
-         */
 
         paneLevelDisplay = new Pane();
         drawGameInformationContainer(paneLevelDisplay, START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight + dimensions_gameInformationMargin),
                 dimensions_gameInformationWidth, dimensions_gameInformationHeight);
 
+        lblLevelTitle = new Label(textLevelTitle.getText());
         lblLevelValue = new Label();
         levelString = String.format("%02d", level);
         textLevelValue.setText(levelString);
         drawGameInformationTitleLabel(
                 paneLevelDisplay, colorInformationTitleLabel, lblLevelValue,
-                textLevelTitle.getText(), fontInformationTitleLabel,
+                lblLevelTitle, fontInformationTitleLabel,
                 START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight + dimensions_gameInformationMargin)
         );
@@ -692,16 +686,6 @@ public class Main extends Application {
                 (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight + dimensions_gameInformationMargin),
                 dimensions_gameInformationWidth
         );
-        /*
-        drawGameInformationTitleLabel(paneLevelDisplay, colorInformationTitleLabel, lblLevelValue, "Level: ",
-                48, START_X_GAME_INFORMATION,
-                (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
-                        dimensions_gameInformationMargin));
-        drawGameInformationValueLabel(paneLevelDisplay, lblLevelValue, colorInformationValueLabel, 48,
-                levelString, START_X_GAME_INFORMATION,
-                (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
-                        dimensions_gameInformationMargin), dimensions_gameInformationWidth);
-         */
 
         paneClearedLinesDisplay = new Pane();
         drawGameInformationContainer(paneClearedLinesDisplay, START_X_GAME_INFORMATION,
@@ -709,10 +693,11 @@ public class Main extends Application {
                         (2 * dimensions_gameInformationMargin)), dimensions_gameInformationWidth,
                 dimensions_gameInformationHeight);
 
+        lblClearedLinesTitle = new Label(textLinesTitle.getText());
         lblClearedLinesValue = new Label();
         drawGameInformationTitleLabel(
                 paneClearedLinesDisplay, colorInformationTitleLabel, lblClearedLinesValue,
-                textLinesTitle.getText(), fontInformationTitleLabel,
+                lblClearedLinesTitle, fontInformationTitleLabel,
                 START_X_GAME_INFORMATION,
                 (
                         START_Y_GAME_INFORMATION +
@@ -731,26 +716,18 @@ public class Main extends Application {
                 ),
                 dimensions_gameInformationWidth
         );
-        /*
-        drawGameInformationTitleLabel(paneClearedLinesDisplay, colorInformationTitleLabel, lblClearedLinesValue,
-                "Lines: ", 48, START_X_GAME_INFORMATION,
-                (START_Y_GAME_INFORMATION + (2 * dimensions_gameInformationHeight) +
-                        (2 * dimensions_gameInformationMargin)));
-        drawGameInformationValueLabel(paneClearedLinesDisplay, lblClearedLinesValue, colorInformationValueLabel,
-                48, String.valueOf(numberOfRowsCleared), START_X_GAME_INFORMATION,
-                (START_Y_GAME_INFORMATION + (2 * dimensions_gameInformationHeight) +
-                        (2 * dimensions_gameInformationMargin)), dimensions_gameInformationWidth);
-         */
 
         paneTimer = new Pane();
         drawGameInformationContainer(paneTimer, START_X_GAME_INFORMATION,
                 (START_Y_GAME_INFORMATION + (3 * dimensions_gameInformationHeight) +
                         (3 * dimensions_gameInformationMargin)), dimensions_gameInformationWidth,
                 dimensions_gameInformationHeight);
+
+        lblTimerTitle = new Label(textTimerTitle.getText());
         lblTimerValue = new Label();
         drawGameInformationTitleLabel(
                 paneTimer, colorInformationTitleLabel, lblTimerValue,
-                textTimerTitle.getText(), fontInformationTitleLabel,
+                lblTimerTitle, fontInformationTitleLabel,
                 START_X_GAME_INFORMATION,
                 (
                         START_Y_GAME_INFORMATION +
@@ -847,18 +824,37 @@ public class Main extends Application {
 
         // Initialize the Color of the block borders
         colorBorder = Color.BLACK;
+    }
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        startTimer();
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Removes the title Labels from the Hold Tetramino and Next Tetramino containers
+     */
+    private void removeContainerTitleLabels() {
+        paneHoldTetramino.getChildren().remove(lblHoldTitle);
+        paneNextTetramino.getChildren().remove(lblNextTitle);
+    }
+
+
+    /**
+     * Removes all the title Labels from the game information containers
+     */
+    private void removeGameInformationTitleLabels() {
+        paneScoreDisplay.getChildren().remove(lblScoreTitle);
+        paneLevelDisplay.getChildren().remove(lblLevelTitle);
+        paneClearedLinesDisplay.getChildren().remove(lblClearedLinesTitle);
+        paneTimer.getChildren().remove(lblTimerTitle);
+    }
+
+
+    /**
+     * Removes all the value Labels from the game information containers
+     */
+    private void removeGameInformationValueLabels() {
+        paneScoreDisplay.getChildren().remove(lblScoreValue);
+        paneLevelDisplay.getChildren().remove(lblLevelValue);
+        paneClearedLinesDisplay.getChildren().remove(lblClearedLinesValue);
+        paneTimer.getChildren().remove(lblTimerValue);
     }
 
 
@@ -1219,8 +1215,8 @@ public class Main extends Application {
 
 
     /**
-     * Overloaded method (traded int fontSize, for Font font). Draws the specified value to the specified
-     * Label in the specified Pane at the specified location and size
+     * Overloaded method (traded int fontSize, for Font font).
+     * Draws the specified value to the specified Label in the specified Pane at the specified location and size
      * @param pane Pane parameter - Pane to draw value in
      * @param lbl Label paramter - Label to draw value in
      * @param color Color parameter - Color to draw the value in
@@ -1256,6 +1252,7 @@ public class Main extends Application {
      * @param startX int parameter - x-coordinate to start drawing in the specified Pane
      * @param startY int parameter - y-coordinate to start drawing in the specified Pane
      */
+    /*
     private void drawGameInformationTitleLabel(
             Pane pane, Color color, Label labelFor, String labelText, int fontSize, int startX, int startY
     ) {
@@ -1284,6 +1281,34 @@ public class Main extends Application {
 
         pane.getChildren().add(lbl);
     }
+     */
+
+
+    /**
+     * Overloaded method that switches String labelText for Label lbl.
+     * Draws the Label title and sets the labelFor property of the specified Label in the specified Pane
+     * at the specified location and size
+     * @param pane Pane parameter - Pane to draw the Label in
+     * @param color Color parameter - Color to draw the Label in
+     * @param labelFor Label parameter - Label to set the labelFor property to
+     * @param lbl Label parameter - The Label to add to the Pane
+     * @param font Font parameter - Font to be used for the text of the specified Label
+     * @param startX int parameter - x-coordinate to start drawing in the specified Pane
+     * @param startY int parameter - y-coordinate to start drawing in the specified Pane
+     */
+    private void drawGameInformationTitleLabel(
+            Pane pane, Color color, Label labelFor, Label lbl, Font font, int startX, int startY
+    ) {
+        lbl.setLabelFor(labelFor);
+        lbl.setLayoutX((startX + 10));
+        lbl.setLayoutY((startY - 10));
+        lbl.setTextFill(color);
+        lbl.setFont(font);
+
+        lbl.getStyleClass().add("title-label");
+
+        pane.getChildren().add(lbl);
+    }
 
 
     /**
@@ -1297,6 +1322,7 @@ public class Main extends Application {
      * @param startX int parameter - x-coordinate to start drawing in the specified Pane
      * @param startY int parameter - y-coordinate to start drawing in the specified Pane
      */
+    /*
     private void drawGameInformationTitleLabel(
             Pane pane, Color color, Label labelFor, String labelText, Font font, int startX, int startY
     ) {
@@ -1312,6 +1338,7 @@ public class Main extends Application {
 
         pane.getChildren().add(lbl);
     }
+     */
 
 
     /**
@@ -1344,6 +1371,7 @@ public class Main extends Application {
      * @param startY int parameter - y-coordinate to start drawing in the specified Pane
      * @param width int parameter - width in pixels of container for the Label
      */
+    /*
     private void drawTitleLabel(
             Pane pane, Color color, int fontSize, String labelText, int startX, int startY, int width
     ) {
@@ -1388,6 +1416,32 @@ public class Main extends Application {
         lbl.setFont(font);
         pane.getChildren().add(lbl);
     }
+     */
+
+
+    /**
+     * Overloaded method: replaces String labelText with Label lbl and int fontSize with Font font
+     * Draws the title Label for a game information display element
+     * @param pane Pane parameter - Pane to draw the Label in
+     * @param color Color parameter - Color to draw the Label in
+     * @param font Font parameter - Font of the text of the specified Label
+     * @param lbl Label parameter - The specified Label
+     * @param startX int parameter - x-coordinate to start drawing in the specified Pane
+     * @param startY int parameter - y-coordinate to start drawing in the specified Pane
+     * @param width int parameter - width in pixels of container for the Label
+     */
+    private void drawTitleLabel(
+            Pane pane, Color color, Font font, Label lbl, int startX, int startY, int width
+    ) {
+        lbl.setLabelFor(pane);
+        lbl.setLayoutX(
+                (startX + ((double)width / 4.5))
+        );
+        lbl.setLayoutY((startY));
+        lbl.setTextFill(color);
+        lbl.setFont(font);
+        pane.getChildren().add(lbl);
+    }
 
 
     /**
@@ -1401,6 +1455,7 @@ public class Main extends Application {
      * @param startY int parameter - y-coordinate to start drawing in the specified Pane
      * @param width int parameter - width in pixels of container for the Label
      */
+    /*
     private void drawTitleLabel(
             Pane pane, Color color, Font font, String labelText, int startX, int startY, int width
     ) {
@@ -1415,6 +1470,7 @@ public class Main extends Application {
         lbl.setFont(font);
         pane.getChildren().add(lbl);
     }
+     */
 
 
     /**
@@ -1874,7 +1930,8 @@ public class Main extends Application {
 
 
     /**
-     * NEED TO REFACTOR (CREATE PAUSE MENU IN SEPARATE METHOD) - Creates and displays the pause menu
+     * NEED TO REFACTOR (CREATE PAUSE MENU IN SEPARATE METHOD, NEED TO DO FOR ALL MENUS) -
+     * Creates and displays the pause menu
      */
     private void openPauseMenu() {
         pauseTimerObj();
@@ -1917,11 +1974,19 @@ public class Main extends Application {
 
         btnReset.setOnMouseClicked(e -> {
             resetGame();
+
+            // Close the pause menu and draw the new current falling Tetramino to restart a new game at initial speed
+            closePauseMenu();
+            drawFallingTetramino();
         });
 
         btnReset.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 resetGame();
+
+                // Close the pause menu and draw the new current falling Tetramino to restart a new game at initial speed
+                closePauseMenu();
+                drawFallingTetramino();
             }
         });
 
@@ -2761,7 +2826,7 @@ public class Main extends Application {
         System.out.println("This is outside the handler, but the font size is = " + fontSizeTest);
 
         btnApply.setOnMouseClicked(e -> {
-            if (hasFontBeenSelected[0] && hasFontSizeBeenSelected[0] || hasTargetElementBeenSelected[0]) {
+            if (hasFontBeenSelected[0] && hasFontSizeBeenSelected[0] && hasTargetElementBeenSelected[0]) {
                 Color color = colorPickerTargetElement.getValue();
                 Font fontCurrent = Font.loadFont(
                         Main.class.getResource(fontFileNames[fontSelectionIndex[0]]).toExternalForm(), fontSize[0]
@@ -2771,31 +2836,35 @@ public class Main extends Application {
                     colorContainerTitleLabel = color;
                     fontContainerTitleLabel = fontCurrent;
 
+                    removeContainerTitleLabels();
+
                     // Draw Hold Label
                     drawTitleLabel(
-                            paneHoldTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textHold.getText(),
+                            paneHoldTetramino, colorContainerTitleLabel, fontContainerTitleLabel, lblHoldTitle,
                             START_X_HOLD_TETRAMINO, START_Y_HOLD_TETRAMINO, dimensions_holdTetraminoWidth
                     );
 
                     // Draw Next Label
                     drawTitleLabel(
-                            paneNextTetramino, colorContainerTitleLabel, fontContainerTitleLabel, textNext.getText(),
+                            paneNextTetramino, colorContainerTitleLabel, fontContainerTitleLabel, lblNextTitle,
                             START_X_NEXT_TETRAMINO, START_Y_NEXT_TETRAMINO, dimensions_nextTetraminoWidth
                     );
                 } else if (targetElement[0] == 1) {
                     colorInformationTitleLabel = color;
                     fontInformationTitleLabel = fontCurrent;
 
+                    removeGameInformationTitleLabels();
+
                     // Draw Score Title Label
                     drawGameInformationTitleLabel(
-                            paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, textScoreTitle.getText(),
+                            paneScoreDisplay, colorInformationTitleLabel, lblScoreValue, lblScoreTitle,
                             fontInformationTitleLabel, START_X_GAME_INFORMATION, START_Y_GAME_INFORMATION
                     );
 
                     // Draw Level Title Label
                     drawGameInformationTitleLabel(
                             paneLevelDisplay, colorInformationTitleLabel, lblLevelValue,
-                            textLevelTitle.getText(), fontInformationTitleLabel,
+                            lblLevelTitle, fontInformationTitleLabel,
                             START_X_GAME_INFORMATION,
                             (START_Y_GAME_INFORMATION + dimensions_gameInformationHeight +
                                     dimensions_gameInformationMargin)
@@ -2804,7 +2873,7 @@ public class Main extends Application {
                     // Draw Cleared Lines Title Label
                     drawGameInformationTitleLabel(
                             paneClearedLinesDisplay, colorInformationTitleLabel, lblClearedLinesValue,
-                            textLinesTitle.getText(), fontInformationTitleLabel,
+                            lblClearedLinesTitle, fontInformationTitleLabel,
                             START_X_GAME_INFORMATION,
                             (
                                     START_Y_GAME_INFORMATION +
@@ -2812,13 +2881,23 @@ public class Main extends Application {
                                     (2 * dimensions_gameInformationMargin)
                             )
                     );
+
+                    // Draw Time Title Label
+                    drawGameInformationTitleLabel(
+                            paneTimer, colorInformationTitleLabel, lblTimerValue,
+                            lblTimerTitle, fontInformationTitleLabel,
+                            START_X_GAME_INFORMATION,
+                            (
+                                    START_Y_GAME_INFORMATION +
+                                            (3 * dimensions_gameInformationHeight) +
+                                            (3 * dimensions_gameInformationMargin)
+                            )
+                    );
                 } else if (targetElement[0] == 2) {
                     colorInformationValueLabel = color;
                     fontInformationValueLabel = fontCurrent;
 
-                    paneScoreDisplay.getChildren().remove(lblScoreValue);
-                    paneLevelDisplay.getChildren().remove(lblLevelValue);
-                    paneClearedLinesDisplay.getChildren().remove(lblClearedLinesValue);
+                    removeGameInformationValueLabels();
 
                     // Draw Score Value Label
                     drawGameInformationValueLabel(
@@ -2849,6 +2928,19 @@ public class Main extends Application {
                             ),
                             dimensions_gameInformationWidth
                     );
+
+                    // Draw Time Value Label
+                    drawGameInformationValueLabel(
+                            paneTimer, lblTimerValue, colorInformationValueLabel,
+                            fontInformationValueLabel, textTimerValue.getText(),
+                            START_X_GAME_INFORMATION,
+                            (
+                                    START_Y_GAME_INFORMATION +
+                                            (3 * dimensions_gameInformationHeight) +
+                                            (3 * dimensions_gameInformationMargin)
+                            ),
+                            dimensions_gameInformationWidth
+                    );
                 }
             }
         });
@@ -2867,6 +2959,12 @@ public class Main extends Application {
     }
 
 
+    /**
+     * Creates and returns the specified Font in the specified Font size
+     * @param selectionIndex int parameter - The index of the user selection from the ComboBox cmbxFonts
+     * @param fontSize int parameter - The value of the user selection from the ComboBox cmbxFontSize
+     * @return Specified Font in the specified Font size
+     */
     private Font getSelectedFontInSelectedFontSize(int selectionIndex, int fontSize) {
         return Font.loadFont(Main.class.getResource(fontFileNames[selectionIndex]).toExternalForm(), fontSize);
     }
@@ -2913,7 +3011,7 @@ public class Main extends Application {
         resetRectangleBlockMatrixes();
 
         // Reset speed to initial value of 800ms between each time a Tetramino moves down one row
-        speed = 800;
+        speed = 799;
 
         // Reset Timer values
         hours = 0;
@@ -2933,9 +3031,9 @@ public class Main extends Application {
         tetraminoHeight = getFallingTetraminoHeight();
         lowestOccupiedRow = boardMatrix.length - 1;
 
-        // Close the pause menu and draw the new current falling Tetramino to restart a new game at initial speed
-        closePauseMenu();
-        drawFallingTetramino();
+//        // Close the pause menu and draw the new current falling Tetramino to restart a new game at initial speed
+//        closePauseMenu();
+//        drawFallingTetramino();
     }
 
 
@@ -3114,19 +3212,6 @@ public class Main extends Application {
      * Sets the game speed that corresponds to the current level
      */
     private void setGameSpeed() {
-        /*
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ///////////////////////// NEED TO MAKE SURE THESE VALUES ARE CORRECT! //////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-         */
         switch (level) {
             case 1:     speed = 716;    break;
             case 2:     speed = 632;    break;
@@ -3560,39 +3645,21 @@ public class Main extends Application {
             Platform.exit();
         });
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////// SOMETHING NOT WORKING CORRECTLY WITH RESETTING THE GAME /////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
         btnReset.setOnMouseClicked(e -> {
             closeStage(stageLostGame);
-            timer.play();
             resetGame();
+            drawFallingTetramino();
+            startTimer();
+            runGameAtSpecifiedSpeed(speed);
         });
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////// SOMETHING NOT WORKING CORRECTLY WITH RESETTING THE GAME /////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
         btnReset.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.SPACE || e.getCode() == KeyCode.ENTER || e.getCode() == controlKeyPause) {
                 closeStage(stageLostGame);
-                timer.play();
                 resetGame();
+                drawFallingTetramino();
+                startTimer();
+                runGameAtSpecifiedSpeed(speed);
             }
         });
 
@@ -3847,7 +3914,7 @@ public class Main extends Application {
         currentRowBoard = startRowBoard;
         currentColBoard = startColBoard;
 
-        fallingTetraminoBlocksCoordinates = new ArrayList<>();
+        // fallingTetraminoBlocksCoordinates = new ArrayList<>();
         fallingTetraminoBlocksCoordinates = getFallingTetraminoBlocksCoordinatesAsArrayList(tetraminoMatrix);
 
         tetraminoHeight = getFallingTetraminoHeight();
@@ -3981,7 +4048,18 @@ public class Main extends Application {
             if (boardMatrix[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]] != 0) {
                 canBePlaced = false;
             }
+        }
 
+        // For when the game is lost and user chooses reset, this removes the Tetramino blocks that were already
+        // at the coordinates the new Tetramino was trying to go. That way, overlapping Rectangle blocks
+        // are not left on the game board when the user chooses to reset the game after a loss.
+        if (!canBePlaced) {
+            for (int i = 0; i < fallingTetraminoBlocksCoordinates.size(); i++) {
+                paneGameBoard.getChildren().remove(blocks[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]]);
+            }
+        }
+
+        for (int i = 0; i < fallingTetraminoBlocksCoordinates.size(); i++) {
             boardMatrix[fallingTetraminoBlocksCoordinates.get(i)[0]][fallingTetraminoBlocksCoordinates.get(i)[1]] = fallingTetraminoType;
         }
 
